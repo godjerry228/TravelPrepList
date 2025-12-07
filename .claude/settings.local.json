@@ -17,7 +17,14 @@
       "Bash(dir:*)",
       "mcp__chrome-devtools__wait_for",
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nInitial commit: 旅遊清單檢查應用程式\n\n功能特色：\n- 分類管理：可新增、編輯、刪除分類\n- 物品管理：可新增、編輯、刪除物品，支援拖曳排序\n- 星號評等：物品可設定 0-5 星重要程度\n- 清單儲存：可儲存、載入、刪除清單到伺服器\n- 進度追蹤：即時顯示完成進度\n- PWA 支援：可安裝為行動應用程式\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(git commit:*)",
+      "Bash(git push)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)"
     ],
     "deny": [],
     "ask": []

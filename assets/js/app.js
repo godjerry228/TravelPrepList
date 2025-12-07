@@ -851,38 +851,26 @@ const App = {
     };
 
     try {
-      const response = await fetch('api/save-list.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name: listName,
-          checklist: exportData
-        })
+      // 使用 localStorage 儲存
+      const savedLists = JSON.parse(localStorage.getItem('savedChecklists') || '{}');
+      savedLists[listName] = {
+        name: listName,
+        checklist: exportData,
+        modified: Date.now()
+      };
+      localStorage.setItem('savedChecklists', JSON.stringify(savedLists));
+
+      Swal.fire({
+        title: '儲存成功',
+        text: `清單「${listName}」已儲存`,
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false
       });
-
-      const result = await response.json();
-
-      if (result.success) {
-        Swal.fire({
-          title: '儲存成功',
-          text: `清單「${listName}」已儲存`,
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false
-        });
-      } else {
-        Swal.fire({
-          title: '儲存失敗',
-          text: result.message || '發生錯誤',
-          icon: 'error'
-        });
-      }
     } catch (error) {
       Swal.fire({
         title: '儲存失敗',
-        text: '無法連線到伺服器',
+        text: '儲存時發生錯誤',
         icon: 'error'
       });
     }
@@ -891,11 +879,11 @@ const App = {
   // 載入清單
   async loadChecklist() {
     try {
-      // 取得已儲存的清單列表
-      const response = await fetch('api/get-lists.php');
-      const result = await response.json();
+      // 從 localStorage 取得已儲存的清單
+      const savedLists = JSON.parse(localStorage.getItem('savedChecklists') || '{}');
+      const listsArray = Object.values(savedLists).sort((a, b) => b.modified - a.modified);
 
-      if (!result.success || result.lists.length === 0) {
+      if (listsArray.length === 0) {
         Swal.fire({
           title: '無已儲存清單',
           text: '目前沒有已儲存的清單',
@@ -905,17 +893,17 @@ const App = {
       }
 
       // 建立清單 HTML
-      const listsHtml = result.lists.map(list => `
+      const listsHtml = listsArray.map(list => `
         <div class="flex items-center justify-between p-3 border rounded-lg mb-2 hover:bg-gray-50">
           <span class="flex-1">${list.name}</span>
           <div class="flex gap-2">
-            <button class="load-list-btn px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600" data-filename="${list.filename}">載入</button>
-            <button class="delete-list-btn px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600" data-filename="${list.filename}" data-name="${list.name}">刪除</button>
+            <button class="load-list-btn px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600" data-listname="${list.name}">載入</button>
+            <button class="delete-list-btn px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600" data-listname="${list.name}">刪除</button>
           </div>
         </div>
       `).join('');
 
-      const modalResult = await Swal.fire({
+      await Swal.fire({
         title: '管理已儲存清單',
         html: `<div class="text-left max-h-96 overflow-y-auto">${listsHtml}</div>`,
         showCancelButton: true,
@@ -925,21 +913,20 @@ const App = {
           // 載入按鈕事件
           document.querySelectorAll('.load-list-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
-              const selectedFilename = btn.dataset.filename;
+              const listName = btn.dataset.listname;
               Swal.close();
-              await this.performLoadChecklist(selectedFilename);
+              await this.performLoadChecklist(listName);
             });
           });
 
           // 刪除按鈕事件
           document.querySelectorAll('.delete-list-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
-              const filename = btn.dataset.filename;
-              const name = btn.dataset.name;
+              const listName = btn.dataset.listname;
 
               const confirmDelete = await Swal.fire({
                 title: '確定刪除？',
-                text: `確定要刪除「${name}」清單嗎？此操作無法復原`,
+                text: `確定要刪除「${listName}」清單嗎？此操作無法復原`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#ef4444',
@@ -949,9 +936,8 @@ const App = {
               });
 
               if (confirmDelete.isConfirmed) {
-                await this.deleteChecklist(filename);
+                await this.deleteChecklist(listName);
                 Swal.close();
-                // 重新開啟清單管理
                 this.loadChecklist();
               }
             });
@@ -961,25 +947,25 @@ const App = {
     } catch (error) {
       Swal.fire({
         title: '載入失敗',
-        text: '無法連線到伺服器',
+        text: '載入時發生錯誤',
         icon: 'error'
       });
     }
   },
 
   // 執行載入清單
-  async performLoadChecklist(selectedFilename) {
+  async performLoadChecklist(listName) {
     try {
-      if (!selectedFilename) return;
+      if (!listName) return;
 
-      // 載入選擇的清單
-      const loadResponse = await fetch(`api/load-list.php?filename=${encodeURIComponent(selectedFilename)}`);
-      const loadResult = await loadResponse.json();
+      // 從 localStorage 載入清單
+      const savedLists = JSON.parse(localStorage.getItem('savedChecklists') || '{}');
+      const savedList = savedLists[listName];
 
-      if (!loadResult.success) {
+      if (!savedList) {
         Swal.fire({
           title: '載入失敗',
-          text: loadResult.message || '發生錯誤',
+          text: '找不到此清單',
           icon: 'error'
         });
         return;
@@ -1000,7 +986,7 @@ const App = {
       if (confirmResult.isConfirmed) {
         // 轉換資料，加上 id 和 checked 狀態
         const newData = {
-          categories: loadResult.checklist.categories.map(cat => ({
+          categories: savedList.checklist.categories.map(cat => ({
             id: Date.now() + Math.random(),
             name: cat.name,
             order: cat.order,
@@ -1029,38 +1015,25 @@ const App = {
     } catch (error) {
       Swal.fire({
         title: '載入失敗',
-        text: '無法連線到伺服器',
+        text: '載入時發生錯誤',
         icon: 'error'
       });
     }
   },
 
   // 刪除清單
-  async deleteChecklist(filename) {
+  async deleteChecklist(listName) {
     try {
-      const response = await fetch('api/delete-list.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ filename })
-      });
+      // 從 localStorage 刪除
+      const savedLists = JSON.parse(localStorage.getItem('savedChecklists') || '{}');
+      delete savedLists[listName];
+      localStorage.setItem('savedChecklists', JSON.stringify(savedLists));
 
-      const result = await response.json();
-
-      if (result.success) {
-        this.showToast('清單已刪除', 'success');
-      } else {
-        Swal.fire({
-          title: '刪除失敗',
-          text: result.message || '發生錯誤',
-          icon: 'error'
-        });
-      }
+      this.showToast('清單已刪除', 'success');
     } catch (error) {
       Swal.fire({
         title: '刪除失敗',
-        text: '無法連線到伺服器',
+        text: '刪除時發生錯誤',
         icon: 'error'
       });
     }
