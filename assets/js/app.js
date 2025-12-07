@@ -207,13 +207,13 @@ const App = {
     const stars = this.renderStars(priority);
 
     return `
-      <li class="group flex items-center gap-2 p-2 rounded hover:bg-gray-50 transition-all duration-200" data-item-id="${item.id}">
+      <li class="group flex items-center gap-2 p-3 rounded hover:bg-blue-50 active:bg-blue-100 transition-all duration-200 cursor-pointer item-row" data-item-id="${item.id}">
         <svg class="w-4 h-4 text-gray-400 item-handle cursor-move flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
         </svg>
         <input
           type="checkbox"
-          class="item-checkbox w-6 h-6 rounded border-gray-300 text-green-500 focus:ring-2 focus:ring-green-500 cursor-pointer flex-shrink-0"
+          class="item-checkbox w-6 h-6 rounded border-gray-300 text-green-500 focus:ring-2 focus:ring-green-500 pointer-events-none flex-shrink-0"
           data-item-id="${item.id}"
           ${item.checked ? 'checked' : ''}
         >
@@ -221,12 +221,12 @@ const App = {
           ${item.name}
         </span>
         ${stars ? `<div class="flex-shrink-0 ml-2">${stars}</div>` : ''}
-        <button class="edit-item-btn p-1 text-blue-500 hover:text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" data-item-id="${item.id}" title="編輯">
+        <button class="edit-item-btn p-1 text-blue-500 hover:text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 z-10" data-item-id="${item.id}" title="編輯" onclick="event.stopPropagation()">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
           </svg>
         </button>
-        <button class="delete-item-btn p-1 text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" data-item-id="${item.id}" title="刪除">
+        <button class="delete-item-btn p-1 text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 z-10" data-item-id="${item.id}" title="刪除" onclick="event.stopPropagation()">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
           </svg>
@@ -290,42 +290,49 @@ const App = {
     });
 
     document.getElementById('checklistGrid').addEventListener('click', async (e) => {
-      const target = e.target.closest('button, input, .category-name');
-      if (!target) return;
-
-      if (target.classList.contains('item-checkbox')) {
-        this.handleItemCheck(target.dataset.itemId);
-      }
-
-      if (target.classList.contains('category-name')) {
-        target.addEventListener('dblclick', () => {
-          this.editCategoryName(target.dataset.categoryId, target.textContent.trim());
-        });
-      }
-
-      if (target.classList.contains('add-item-btn') || target.closest('.add-item-btn')) {
-        const btn = target.closest('.add-item-btn') || target;
-        this.showAddItemModal(btn.dataset.categoryId);
-      }
-
-      if (target.classList.contains('edit-item-btn') || target.closest('.edit-item-btn')) {
-        const btn = target.closest('.edit-item-btn') || target;
+      // 優先處理按鈕點擊
+      if (e.target.closest('.edit-item-btn')) {
+        const btn = e.target.closest('.edit-item-btn');
         this.editItem(btn.dataset.itemId);
+        return;
       }
 
-      if (target.classList.contains('edit-category-btn') || target.closest('.edit-category-btn')) {
-        const btn = target.closest('.edit-category-btn') || target;
-        this.editCategory(btn.dataset.categoryId);
-      }
-
-      if (target.classList.contains('delete-category-btn') || target.closest('.delete-category-btn')) {
-        const btn = target.closest('.delete-category-btn') || target;
-        this.handleDeleteCategory(btn.dataset.categoryId);
-      }
-
-      if (target.classList.contains('delete-item-btn') || target.closest('.delete-item-btn')) {
-        const btn = target.closest('.delete-item-btn') || target;
+      if (e.target.closest('.delete-item-btn')) {
+        const btn = e.target.closest('.delete-item-btn');
         this.handleDeleteItem(btn.dataset.itemId);
+        return;
+      }
+
+      if (e.target.closest('.add-item-btn')) {
+        const btn = e.target.closest('.add-item-btn');
+        this.showAddItemModal(btn.dataset.categoryId);
+        return;
+      }
+
+      if (e.target.closest('.edit-category-btn')) {
+        const btn = e.target.closest('.edit-category-btn');
+        this.editCategory(btn.dataset.categoryId);
+        return;
+      }
+
+      if (e.target.closest('.delete-category-btn')) {
+        const btn = e.target.closest('.delete-category-btn');
+        this.handleDeleteCategory(btn.dataset.categoryId);
+        return;
+      }
+
+      // 處理項目列點擊（打勾）
+      const itemRow = e.target.closest('.item-row');
+      if (itemRow && !e.target.closest('.item-handle')) {
+        this.handleItemCheck(itemRow.dataset.itemId);
+        return;
+      }
+
+      // 處理分類名稱雙擊
+      if (e.target.classList.contains('category-name')) {
+        e.target.addEventListener('dblclick', () => {
+          this.editCategoryName(e.target.dataset.categoryId, e.target.textContent.trim());
+        });
       }
     });
   },
@@ -439,15 +446,37 @@ const App = {
     const data = this.getData();
     let totalCount = 0;
     let checkedCount = 0;
+    let totalScore = 0; // 總分數（加權）
+    let earnedScore = 0; // 已獲得分數（加權）
 
     data.categories.forEach(cat => {
       cat.items.forEach(item => {
         totalCount++;
-        if (item.checked) checkedCount++;
+
+        // 計算加權分數：星號越多分數越高
+        // 0星 = 1分（一般項目）
+        // 1星 = 2分
+        // 2星 = 3分
+        // 3星 = 5分
+        // 4星 = 8分
+        // 5星 = 13分（重點項目）
+        const itemWeight = item.priority === 0 ? 1 :
+                          item.priority === 1 ? 2 :
+                          item.priority === 2 ? 3 :
+                          item.priority === 3 ? 5 :
+                          item.priority === 4 ? 8 : 13;
+
+        totalScore += itemWeight;
+
+        if (item.checked) {
+          checkedCount++;
+          earnedScore += itemWeight;
+        }
       });
     });
 
-    const percentage = totalCount > 0 ? Math.round((checkedCount / totalCount) * 100) : 0;
+    // 使用加權分數計算百分比
+    const percentage = totalScore > 0 ? Math.round((earnedScore / totalScore) * 100) : 0;
 
     document.getElementById('bannerCheckedCount').textContent = checkedCount;
     document.getElementById('bannerTotalCount').textContent = totalCount;
