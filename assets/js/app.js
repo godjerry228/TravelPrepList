@@ -6,6 +6,9 @@ const App = {
   // 初始化應用程式
   async init() {
     try {
+      // 預載入已儲存的清單到 localStorage
+      await this.preloadSavedLists();
+
       // 載入用戶清單資料
       await this.loadUserData();
 
@@ -20,6 +23,44 @@ const App = {
     } catch (error) {
       console.error('初始化失敗:', error);
       this.showToast('初始化失敗: ' + error.message, 'error');
+    }
+  },
+
+  // 預載入已儲存的清單
+  async preloadSavedLists() {
+    try {
+      // 檢查是否已經預載入過
+      const preloadFlag = localStorage.getItem('savedListsPreloaded');
+      if (preloadFlag === 'true') {
+        return; // 已經預載入過，不需要重複載入
+      }
+
+      // 嘗試載入 Jerry 的清單
+      const response = await fetch('saved-lists/Jerry 2026日本冬天之旅清單.json');
+      if (response.ok) {
+        const jerryList = await response.json();
+
+        // 取得現有的已儲存清單
+        const savedLists = JSON.parse(localStorage.getItem('savedChecklists') || '{}');
+
+        // 將 Jerry 的清單加入
+        savedLists['Jerry 2026日本冬天之旅清單'] = {
+          name: 'Jerry 2026日本冬天之旅清單',
+          checklist: jerryList,
+          modified: Date.now()
+        };
+
+        // 儲存回 localStorage
+        localStorage.setItem('savedChecklists', JSON.stringify(savedLists));
+
+        // 設定預載入標記
+        localStorage.setItem('savedListsPreloaded', 'true');
+
+        console.log('已預載入 Jerry 2026日本冬天之旅清單');
+      }
+    } catch (error) {
+      console.error('預載入清單失敗:', error);
+      // 不中斷應用程式初始化
     }
   },
 
