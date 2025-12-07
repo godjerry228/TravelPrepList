@@ -35,7 +35,7 @@
 #### 方式一：使用 PHP 內建伺服器
 
 ```bash
-cd H:\wamp\www\PHP8\Demo\travelChecklist
+cd C:\wamp\www\travelChecklist
 php -S localhost:8000
 ```
 
@@ -201,7 +201,7 @@ MIT License
 
 ## 作者
 
-Claude Code + User
+Jerry
 
 ## 版本
 
