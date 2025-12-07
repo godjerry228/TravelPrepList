@@ -1,0 +1,169 @@
+{
+  "categories": [
+    {
+      "name": "重要資料文件",
+      "order": 0,
+      "items": [
+        { "name": "機票", "order": 0, "priority": 3 },
+        { "name": "護照", "order": 1, "priority": 3 },
+        { "name": "Visit Japan", "order": 3, "priority": 0 },
+        { "name": "證件", "order": 4, "priority": 2 },
+        { "name": "個人照片 (2 張)", "order": 5, "priority": 0 },
+        { "name": "國際學生證", "order": 6, "priority": 0 },
+        { "name": "黑皮書", "order": 7, "priority": 0 },
+        { "name": "美金", "order": 8, "priority": 1 },
+        { "name": "外幣", "order": 9, "priority": 0 },
+        { "name": "宿皮卡", "order": 10, "priority": 0 },
+        { "name": "信用卡、提款卡", "order": 11, "priority": 1 }
+      ]
+    },
+    {
+      "name": "行程文件資料",
+      "order": 1,
+      "items": [
+        { "name": "行程表、旅遊書 (電子地圖)", "order": 0, "priority": 2 },
+        { "name": "明信片、紀念品清單", "order": 1, "priority": 0 },
+        { "name": "採購清單 (比價)", "order": 2, "priority": 0 },
+        { "name": "旅館資料 (地址、電話、網址)", "order": 3, "priority": 2 },
+        { "name": "出發公告資料", "order": 4, "priority": 0 },
+        { "name": "特殊事項提醒", "order": 5, "priority": 1 }
+      ]
+    },
+    {
+      "name": "電子電器用品",
+      "order": 2,
+      "items": [
+        { "name": "筆電 (電源/電源線/電源線組)", "order": 0, "priority": 0 },
+        { "name": "相機、拍立得 (電池/充電器)", "order": 1, "priority": 0 },
+        { "name": "拍立得相片、記憶卡、讀卡機", "order": 2, "priority": 0 },
+        { "name": "手機 (電池/充電器/開機鈕)", "order": 3, "priority": 2 },
+        { "name": "隨身聽 (耳機)", "order": 4, "priority": 0 },
+        { "name": "無線AP (可用手機當熱點/更新內容)", "order": 5, "priority": 0 },
+        { "name": "腳架、自拍桿", "order": 6, "priority": 0 },
+        { "name": "行動電源及其配件", "order": 7, "priority": 1 },
+        { "name": "USB 充電線", "order": 8, "priority": 1 },
+        { "name": "三插頭、延長線、排插", "order": 9, "priority": 0 },
+        { "name": "錄音筆", "order": 10, "priority": 0 }
+      ]
+    },
+    {
+      "name": "常備藥品",
+      "order": 3,
+      "items": [
+        { "name": "慢性病藥", "order": 0, "priority": 0 },
+        { "name": "旅遊用藥", "order": 1, "priority": 1 },
+        { "name": "疫苗 (皮膚膏)", "order": 2, "priority": 0 },
+        { "name": "體溫計", "order": 3, "priority": 0 },
+        { "name": "止瀉藥", "order": 4, "priority": 1 },
+        { "name": "退燒藥", "order": 5, "priority": 1 },
+        { "name": "感冒藥", "order": 6, "priority": 1 },
+        { "name": "綠油精", "order": 7, "priority": 0 },
+        { "name": "安眠藥", "order": 8, "priority": 0 },
+        { "name": "金創藥", "order": 9, "priority": 0 },
+        { "name": "陽壯膏", "order": 10, "priority": 0 },
+        { "name": "OK 繃", "order": 11, "priority": 1 },
+        { "name": "蚊蟲藥", "order": 12, "priority": 0 },
+        { "name": "避孕藥", "order": 13, "priority": 0 }
+      ]
+    },
+    {
+      "name": "盥洗用品、保養品、化妝品",
+      "order": 4,
+      "items": [
+        { "name": "盥洗用品 (洗髮髮乳、沐浴乳、洗面乳、牙刷、牙膏)", "order": 0, "priority": 2 },
+        { "name": "毛巾、澡巾", "order": 1, "priority": 0 },
+        { "name": "沖水浴、沐浴巾", "order": 2, "priority": 0 },
+        { "name": "生理用品 (衛生棉條)", "order": 3, "priority": 0 },
+        { "name": "隱形眼鏡、盒", "order": 4, "priority": 0 },
+        { "name": "隱形眼鏡藥水、整理髮針、太陽眼鏡、眼鏡盒", "order": 5, "priority": 0 },
+        { "name": "護手霜、口紅", "order": 6, "priority": 0 },
+        { "name": "眼影", "order": 7, "priority": 0 },
+        { "name": "眉筆", "order": 8, "priority": 0 },
+        { "name": "防曬膏、眼影筆", "order": 9, "priority": 0 },
+        { "name": "粉底", "order": 10, "priority": 0 },
+        { "name": "修眉刀", "order": 11, "priority": 0 },
+        { "name": "粉撲粉、眉毛夾", "order": 12, "priority": 0 }
+      ]
+    },
+    {
+      "name": "衣物",
+      "order": 5,
+      "items": [
+        { "name": "正式服裝 (洋裝、襯衫、裙子、襯裙)", "order": 0, "priority": 0 },
+        { "name": "上衣、毛衣、保暖衣", "order": 1, "priority": 1 },
+        { "name": "褲子、短褲、絲襯衫", "order": 2, "priority": 0 },
+        { "name": "絲巾、領帶、圍巾", "order": 3, "priority": 0 },
+        { "name": "皮帶", "order": 4, "priority": 0 },
+        { "name": "連身裙", "order": 5, "priority": 0 },
+        { "name": "運動衣、運動褲、運動鞋", "order": 6, "priority": 0 },
+        { "name": "外套、風衣、雪衣、羽絨外套", "order": 7, "priority": 1 },
+        { "name": "泳衣、泳鏡、泳帽", "order": 8, "priority": 0 },
+        { "name": "手套、毛帽、毛巾", "order": 9, "priority": 0 },
+        { "name": "運動鞋、休閒鞋", "order": 10, "priority": 0 },
+        { "name": "拖鞋、涼鞋", "order": 11, "priority": 0 },
+        { "name": "襪子、睡衣", "order": 12, "priority": 0 },
+        { "name": "帽子", "order": 13, "priority": 0 }
+      ]
+    },
+    {
+      "name": "日用品",
+      "order": 6,
+      "items": [
+        { "name": "指甲刀、小剪刀", "order": 0, "priority": 0 },
+        { "name": "隱形眼鏡、眼鏡盒", "order": 1, "priority": 0 },
+        { "name": "太陽眼鏡", "order": 2, "priority": 0 },
+        { "name": "眼鏡布", "order": 3, "priority": 0 },
+        { "name": "手電筒、頭燈", "order": 4, "priority": 0 },
+        { "name": "耳塞", "order": 5, "priority": 0 },
+        { "name": "防水袋、防潮袋", "order": 6, "priority": 0 },
+        { "name": "吹風機", "order": 7, "priority": 0 },
+        { "name": "梳子、帽子", "order": 8, "priority": 0 },
+        { "name": "床單、睡袋", "order": 9, "priority": 0 },
+        { "name": "睡衣", "order": 10, "priority": 0 }
+      ]
+    },
+    {
+      "name": "備用食品與餐具",
+      "order": 7,
+      "items": [
+        { "name": "碗筷、刀叉、筷子", "order": 0, "priority": 0 },
+        { "name": "保溫瓶", "order": 1, "priority": 0 },
+        { "name": "水壺、水杯", "order": 2, "priority": 1 },
+        { "name": "即食食品", "order": 3, "priority": 0 },
+        { "name": "牛奶", "order": 4, "priority": 0 },
+        { "name": "茶、咖啡包", "order": 5, "priority": 0 },
+        { "name": "巧克力", "order": 6, "priority": 0 },
+        { "name": "備用食品", "order": 7, "priority": 0 }
+      ]
+    },
+    {
+      "name": "特定國家需攜帶的物品",
+      "order": 8,
+      "items": [
+        { "name": "羽絨外套 (冬天)", "order": 0, "priority": 0 },
+        { "name": "雨具", "order": 1, "priority": 1 },
+        { "name": "手電筒、蠟燭 (偏僻地區)", "order": 2, "priority": 0 },
+        { "name": "電池", "order": 3, "priority": 0 },
+        { "name": "防曬霜", "order": 4, "priority": 1 },
+        { "name": "防蚊液", "order": 5, "priority": 0 }
+      ]
+    },
+    {
+      "name": "打包準備",
+      "order": 9,
+      "items": [
+        { "name": "預留空間", "order": 0, "priority": 0 },
+        { "name": "行李重量", "order": 1, "priority": 0 },
+        { "name": "清潔用具 (吸塵器/拖把)", "order": 2, "priority": 0 }
+      ]
+    },
+    {
+      "name": "備註",
+      "order": 10,
+      "items": [
+        { "name": "帶足夠現金，信用卡、提款卡備用", "order": 0, "priority": 2 },
+        { "name": "旅途中保持手機充電", "order": 1, "priority": 1 }
+      ]
+    }
+  ]
+}

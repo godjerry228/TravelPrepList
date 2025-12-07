@@ -1,0 +1,160 @@
+/* 自訂樣式 */
+
+/* 平滑捲動 */
+html {
+  scroll-behavior: smooth;
+}
+
+/* 背景素色設計 */
+.bg-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-attachment: fixed;
+}
+
+/* 勾選框樣式優化 */
+.item-checkbox {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.item-checkbox:hover {
+  transform: scale(1.1);
+}
+
+/* 拖曳手柄樣式 */
+.category-handle,
+.item-handle {
+  cursor: grab;
+  touch-action: none;
+}
+
+.category-handle:active,
+.item-handle:active {
+  cursor: grabbing;
+}
+
+/* 物品列表項目懸停效果 */
+li:hover .delete-item-btn {
+  opacity: 1;
+}
+
+/* Sortable 拖曳中的樣式 */
+.sortable-ghost {
+  opacity: 0.4;
+  background: #e5e7eb;
+}
+
+.sortable-drag {
+  opacity: 0.8;
+  transform: rotate(2deg);
+}
+
+/* Toast 動畫 */
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+#toastContainer > div {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* 響應式調整 */
+@media (max-width: 768px) {
+  /* 手機版：底部按鈕調整 */
+  footer .flex {
+    gap: 0.5rem;
+  }
+
+  footer button {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  footer button svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  /* 統計資訊縮小 */
+  #statsDisplay {
+    font-size: 0.75rem;
+  }
+}
+
+/* 載入動畫 */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.loading {
+  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* 卡片陰影優化 */
+.shadow-md {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* 刪除線樣式 */
+.line-through {
+  text-decoration: line-through;
+  text-decoration-color: #9ca3af;
+  text-decoration-thickness: 2px;
+}
+
+/* 按鈕點擊反饋 */
+button:active {
+  transform: scale(0.95);
+}
+
+/* 選擇框樣式優化 */
+select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}
+
+/* 防止長文字溢出 */
+.item-name,
+.category-name {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* PWA 安裝提示樣式 */
+.install-prompt {
+  position: fixed;
+  bottom: 5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1f2937;
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  animation: slideIn 0.3s ease-out;
+}
+
+/* 深色模式支援（未來擴展）*/
+@media (prefers-color-scheme: dark) {
+  /* 暫時不啟用深色模式 */
+}
