@@ -82,8 +82,13 @@
     </div>
   </main>
 
-  <!-- 底部進度條 -->
-  <footer class="footer-container">
+  <!-- 隱藏的檔案輸入 -->
+  <input type="file" id="importFileInput" accept=".json" style="display: none;">
+
+  </div><!-- /appContainer -->
+
+  <!-- 底部進度條（獨立於 appContainer 外，確保 fixed 定位正常） -->
+  <footer id="appFooter" class="footer-container hidden">
     <div class="footer-content">
       <div class="progress-header">
         <span id="progressSlogan" class="progress-slogan text-gray-600">開始整理行李吧！</span>
@@ -202,17 +207,12 @@
     </div>
   </div>
 
-  <!-- 隱藏的檔案輸入 -->
-  <input type="file" id="importFileInput" accept=".json" style="display: none;">
-
-  </div><!-- /appContainer -->
-
   <!-- JavaScript 模組 -->
   <script src="assets/js/auth.js?v=2"></script>
   <script src="assets/js/storage.js?v=8"></script>
   <script src="assets/js/user.js?v=8"></script>
   <script src="assets/js/checklist.js?v=8"></script>
-  <script src="assets/js/app.js?v=14"></script>
+  <script src="assets/js/app.js?v=15"></script>
 
   <!-- PWA 註冊 -->
   <script>

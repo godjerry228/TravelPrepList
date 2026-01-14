@@ -19,12 +19,14 @@ const App = {
   showLogin() {
     document.getElementById('loginScreen').classList.remove('hidden');
     document.getElementById('appContainer').classList.add('hidden');
+    document.getElementById('appFooter').classList.add('hidden');
   },
 
   // 顯示主應用程式
   showApp() {
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('appContainer').classList.remove('hidden');
+    document.getElementById('appFooter').classList.remove('hidden');
   },
 
   // 綁定登入相關事件
