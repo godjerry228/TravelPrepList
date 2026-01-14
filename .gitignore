@@ -13,3 +13,6 @@ Thumbs.db
 
 # 本地設定
 .claude/settings.local.json
+
+# 本地清單資料（不上傳 GitHub）
+saved-lists/

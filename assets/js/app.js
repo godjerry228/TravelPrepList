@@ -3,7 +3,56 @@ const App = {
   STORAGE_KEY: 'travelChecklistData',
   sortableInstances: [],
 
-  // 初始化應用程式
+  // 啟動應用程式（入口點）
+  start() {
+    this.bindAuthEvents();
+
+    if (Auth.isLoggedIn()) {
+      this.showApp();
+      this.init();
+    } else {
+      this.showLogin();
+    }
+  },
+
+  // 顯示登入畫面
+  showLogin() {
+    document.getElementById('loginScreen').classList.remove('hidden');
+    document.getElementById('appContainer').classList.add('hidden');
+  },
+
+  // 顯示主應用程式
+  showApp() {
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('appContainer').classList.remove('hidden');
+  },
+
+  // 綁定登入相關事件
+  bindAuthEvents() {
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const password = document.getElementById('loginPassword').value;
+
+      try {
+        await Auth.login(password);
+        this.showApp();
+        this.init();
+        this.showToast('登入成功！', 'success');
+      } catch (error) {
+        this.showToast(error.message, 'error');
+      }
+    });
+  },
+
+  // 登出
+  handleLogout() {
+    Auth.logout();
+    this.showLogin();
+    document.getElementById('loginPassword').value = '';
+    this.showToast('已登出', 'info');
+  },
+
+  // 初始化應用程式（登入後）
   async init() {
     try {
       // 預載入已儲存的清單到 localStorage
@@ -18,8 +67,6 @@ const App = {
 
       // 綁定事件
       this.bindEvents();
-
-      this.showToast('載入完成', 'success');
     } catch (error) {
       console.error('初始化失敗:', error);
       this.showToast('初始化失敗: ' + error.message, 'error');
@@ -288,6 +335,11 @@ const App = {
     document.getElementById('resetAllBtn').addEventListener('click', () => {
       this.toggleMenu(false);
       this.showResetConfirmModal();
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      this.toggleMenu(false);
+      this.handleLogout();
     });
 
     const grid = document.getElementById('checklistGrid');
@@ -1245,5 +1297,5 @@ const App = {
 
 // 啟動應用程式
 document.addEventListener('DOMContentLoaded', () => {
-  App.init();
+  App.start();
 });
