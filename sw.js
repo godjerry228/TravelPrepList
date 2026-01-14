@@ -1,5 +1,5 @@
 // Service Worker
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const CACHE_NAME = `travel-checklist-${CACHE_VERSION}`;
 
 // 需要快取的靜態資源

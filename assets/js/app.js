@@ -3,12 +3,6 @@ const App = {
   STORAGE_KEY: 'travelChecklistData',
   sortableInstances: [],
 
-  // 分類顏色
-  categoryColors: [
-    'dot-red', 'dot-orange', 'dot-yellow', 'dot-green', 'dot-teal',
-    'dot-blue', 'dot-indigo', 'dot-purple', 'dot-pink', 'dot-rose'
-  ],
-
   // 初始化應用程式
   async init() {
     try {
@@ -181,7 +175,6 @@ const App = {
     const items = category.items || [];
     items.sort((a, b) => a.order - b.order);
 
-    const colorClass = this.categoryColors[index % this.categoryColors.length];
     const progress = this.getCategoryProgress(category);
 
     return `
@@ -193,7 +186,6 @@ const App = {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
             </svg>
           </div>
-          <div class="category-dot ${colorClass}"></div>
           <h3 class="category-name">${category.name}</h3>
           <div class="category-progress">
             <div class="category-progress-bar">
@@ -201,23 +193,11 @@ const App = {
             </div>
             <span>${progress.checked}/${progress.total}</span>
           </div>
-          <div class="category-actions">
-            <button class="category-action-btn add-item-btn text-blue-500" data-category-id="${category.id}" title="新增物品">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-              </svg>
-            </button>
-            <button class="category-action-btn edit-category-btn text-green-500" data-category-id="${category.id}" title="編輯分類">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-              </svg>
-            </button>
-            <button class="category-action-btn delete-category-btn text-red-500" data-category-id="${category.id}" title="刪除分類">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-              </svg>
-            </button>
-          </div>
+          <button class="category-more-btn" data-category-id="${category.id}" title="更多選項">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
+            </svg>
+          </button>
         </div>
 
         <!-- 物品列表 -->
@@ -225,7 +205,7 @@ const App = {
           ${items.map(item => this.renderItem(item)).join('')}
         </div>
 
-        ${items.length === 0 ? '<p class="text-center text-gray-400 py-4 text-sm">尚無物品，點擊 + 新增</p>' : ''}
+        ${items.length === 0 ? '<p class="text-center text-gray-400 py-4 text-sm">尚無物品，點擊 ⋮ 新增</p>' : ''}
       </div>
     `;
   },
@@ -312,55 +292,9 @@ const App = {
 
     const grid = document.getElementById('checklistGrid');
 
-    // 長按計時器
-    let longPressTimer = null;
-    let longPressTriggered = false;
-
-    // 長按開始（觸控）
-    grid.addEventListener('touchstart', (e) => {
-      const itemRow = e.target.closest('.item-row');
-      if (itemRow && !e.target.closest('.drag-handle')) {
-        longPressTriggered = false;
-        longPressTimer = setTimeout(() => {
-          longPressTriggered = true;
-          this.showItemActionMenu(itemRow.dataset.itemId);
-        }, 500); // 500ms 長按觸發
-      }
-    }, { passive: true });
-
-    // 長按取消（觸控移動或結束）
-    grid.addEventListener('touchmove', () => {
-      if (longPressTimer) {
-        clearTimeout(longPressTimer);
-        longPressTimer = null;
-      }
-    }, { passive: true });
-
-    grid.addEventListener('touchend', () => {
-      if (longPressTimer) {
-        clearTimeout(longPressTimer);
-        longPressTimer = null;
-      }
-    });
-
-    // 右鍵選單（桌面版）
-    grid.addEventListener('contextmenu', (e) => {
-      const itemRow = e.target.closest('.item-row');
-      if (itemRow) {
-        e.preventDefault();
-        this.showItemActionMenu(itemRow.dataset.itemId);
-      }
-    });
-
     // 點擊事件
     grid.addEventListener('click', async (e) => {
-      // 如果剛觸發長按，忽略這次點擊
-      if (longPressTriggered) {
-        longPressTriggered = false;
-        return;
-      }
-
-      // 處理「更多」按鈕（電腦版用）
+      // 處理物品「更多」按鈕
       if (e.target.closest('.item-more-btn')) {
         e.stopPropagation();
         const btn = e.target.closest('.item-more-btn');
@@ -368,22 +302,11 @@ const App = {
         return;
       }
 
-      // 處理分類按鈕
-      if (e.target.closest('.add-item-btn')) {
-        const btn = e.target.closest('.add-item-btn');
-        this.showAddItemModal(btn.dataset.categoryId);
-        return;
-      }
-
-      if (e.target.closest('.edit-category-btn')) {
-        const btn = e.target.closest('.edit-category-btn');
-        this.editCategory(btn.dataset.categoryId);
-        return;
-      }
-
-      if (e.target.closest('.delete-category-btn')) {
-        const btn = e.target.closest('.delete-category-btn');
-        this.handleDeleteCategory(btn.dataset.categoryId);
+      // 處理分類「更多」按鈕
+      if (e.target.closest('.category-more-btn')) {
+        e.stopPropagation();
+        const btn = e.target.closest('.category-more-btn');
+        this.showCategoryActionMenu(btn.dataset.categoryId);
         return;
       }
 
@@ -396,7 +319,41 @@ const App = {
     });
   },
 
-  // 顯示物品操作選單（長按觸發）
+  // 顯示分類操作選單
+  async showCategoryActionMenu(categoryId) {
+    const data = this.getData();
+    const category = data.categories.find(c => String(c.id) === String(categoryId));
+
+    if (!category) return;
+
+    const result = await Swal.fire({
+      title: category.name,
+      html: '<p class="text-gray-500">選擇要執行的操作</p>',
+      showDenyButton: true,
+      showCancelButton: true,
+      confirmButtonText: '➕ 新增物品',
+      denyButtonText: '✏️ 編輯名稱',
+      cancelButtonText: '關閉',
+      confirmButtonColor: '#3b82f6',
+      denyButtonColor: '#10b981',
+      cancelButtonColor: '#6b7280',
+      footer: '<button id="delete-category-btn" class="text-red-500 hover:text-red-700 text-sm underline">🗑️ 刪除此分類</button>',
+      didOpen: () => {
+        document.getElementById('delete-category-btn').addEventListener('click', async () => {
+          Swal.close();
+          this.handleDeleteCategory(categoryId);
+        });
+      }
+    });
+
+    if (result.isConfirmed) {
+      this.showAddItemModal(categoryId);
+    } else if (result.isDenied) {
+      this.editCategory(categoryId);
+    }
+  },
+
+  // 顯示物品操作選單
   async showItemActionMenu(itemId) {
     const data = this.getData();
     let foundItem = null;

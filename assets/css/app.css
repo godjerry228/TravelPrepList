@@ -172,13 +172,6 @@ body {
   margin-bottom: 0.75rem;
 }
 
-.category-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
 .category-name {
   flex: 1;
   font-size: 1.1rem;
@@ -210,26 +203,28 @@ body {
   transition: width 0.3s ease;
 }
 
-.category-actions {
-  display: flex;
-  gap: 0.25rem;
-}
-
-.category-action-btn {
+/* === 分類更多按鈕 === */
+.category-more-btn {
   width: 36px;
   height: 36px;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #6b7280;
+  background: transparent;
+  border: none;
+  cursor: pointer;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
-.category-action-btn:hover {
-  background: rgba(0, 0, 0, 0.05);
+.category-more-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: #374151;
 }
 
-.category-action-btn:active {
+.category-more-btn:active {
   transform: scale(0.9);
 }
 
@@ -329,7 +324,7 @@ body {
   background: #fbbf24;
 }
 
-/* === 拖曳手柄（預設隱藏，排序時可見）=== */
+/* === 拖曳手柄 === */
 .drag-handle {
   width: 20px;
   height: 20px;
@@ -338,13 +333,14 @@ body {
   justify-content: center;
   cursor: grab;
   touch-action: none;
-  color: #c9cdd4;
+  color: #9ca3af;
   flex-shrink: 0;
-  opacity: 0.5;
-  transition: opacity 0.2s ease;
+  opacity: 0.7;
+  transition: all 0.2s ease;
 }
 
-.item-row:hover .drag-handle {
+.drag-handle:hover {
+  color: #6b7280;
   opacity: 1;
 }
 
@@ -352,17 +348,17 @@ body {
   cursor: grabbing;
 }
 
-/* 手機版拖曳手柄更小 */
+/* 手機版拖曳手柄 */
 @media (max-width: 768px) {
   .drag-handle {
-    width: 16px;
-    height: 16px;
-    opacity: 0.4;
+    width: 18px;
+    height: 18px;
+    opacity: 0.6;
   }
 
   .drag-handle svg {
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
   }
 }
 
@@ -376,15 +372,10 @@ body {
   justify-content: center;
   color: #9ca3af;
   flex-shrink: 0;
-  opacity: 0;
   transition: all 0.2s ease;
   background: transparent;
   border: none;
   cursor: pointer;
-}
-
-.item-row:hover .item-more-btn {
-  opacity: 1;
 }
 
 .item-more-btn:hover {
@@ -396,10 +387,9 @@ body {
   transform: scale(0.9);
 }
 
-/* 手機版：更多按鈕常駐顯示但較小 */
+/* 手機版更多按鈕 */
 @media (max-width: 768px) {
   .item-more-btn {
-    opacity: 0.6;
     width: 28px;
     height: 28px;
   }
@@ -410,7 +400,7 @@ body {
   }
 }
 
-/* === 長按操作選單樣式 === */
+/* === 操作選單樣式 === */
 .item-action-menu {
   padding: 0.5rem 0;
 }
@@ -424,12 +414,6 @@ body {
   font-size: 0.875rem;
   color: #6b7280;
   margin-bottom: 0.75rem;
-}
-
-/* 長按提示動畫 */
-.item-row.long-press-active {
-  background: rgba(99, 102, 241, 0.15);
-  transform: scale(0.98);
 }
 
 /* === 底部進度條 === */
@@ -794,14 +778,3 @@ body {
   animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* === 分類顏色 === */
-.dot-red { background: #ef4444; }
-.dot-orange { background: #f97316; }
-.dot-yellow { background: #eab308; }
-.dot-green { background: #22c55e; }
-.dot-teal { background: #14b8a6; }
-.dot-blue { background: #3b82f6; }
-.dot-indigo { background: #6366f1; }
-.dot-purple { background: #8b5cf6; }
-.dot-pink { background: #ec4899; }
-.dot-rose { background: #f43f5e; }
