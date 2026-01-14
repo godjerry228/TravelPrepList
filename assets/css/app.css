@@ -892,3 +892,8 @@ body {
   background: linear-gradient(135deg, #ef4444, #dc2626);
 }
 
+/* === 選單青色圖示 === */
+.menu-item-icon.cyan {
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+}
+

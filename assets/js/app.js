@@ -337,6 +337,11 @@ const App = {
       this.showResetConfirmModal();
     });
 
+    document.getElementById('checkUpdateBtn').addEventListener('click', () => {
+      this.toggleMenu(false);
+      this.checkForUpdate();
+    });
+
     document.getElementById('logoutBtn').addEventListener('click', () => {
       this.toggleMenu(false);
       this.handleLogout();
@@ -1271,6 +1276,36 @@ const App = {
         text: '刪除時發生錯誤',
         icon: 'error'
       });
+    }
+  },
+
+  // 檢查更新
+  async checkForUpdate() {
+    try {
+      // 清除 Service Worker 快取
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const registration of registrations) {
+          await registration.unregister();
+        }
+      }
+
+      // 清除瀏覽器快取並重新載入
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+      }
+
+      this.showToast('正在更新...', 'info');
+
+      // 強制重新載入頁面
+      setTimeout(() => {
+        location.reload(true);
+      }, 1000);
+    } catch (error) {
+      console.error('更新失敗:', error);
+      // 即使清除快取失敗，也嘗試重新載入
+      location.reload(true);
     }
   },
 

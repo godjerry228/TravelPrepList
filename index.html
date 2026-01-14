@@ -20,7 +20,7 @@
   <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
 
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="assets/css/app.css?v=15">
+  <link rel="stylesheet" href="assets/css/app.css?v=16">
 
   <!-- SortableJS CDN -->
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
@@ -167,6 +167,18 @@
           </div>
         </button>
 
+        <button id="checkUpdateBtn" class="menu-item">
+          <div class="menu-item-icon cyan">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+            </svg>
+          </div>
+          <div class="menu-item-text">
+            <div class="menu-item-title">檢查更新</div>
+            <div class="menu-item-desc">重新載入最新版本</div>
+          </div>
+        </button>
+
         <div class="menu-divider"></div>
 
         <button id="logoutBtn" class="menu-item logout">
@@ -196,11 +208,11 @@
   </div><!-- /appContainer -->
 
   <!-- JavaScript 模組 -->
-  <script src="assets/js/auth.js?v=1"></script>
+  <script src="assets/js/auth.js?v=2"></script>
   <script src="assets/js/storage.js?v=8"></script>
   <script src="assets/js/user.js?v=8"></script>
   <script src="assets/js/checklist.js?v=8"></script>
-  <script src="assets/js/app.js?v=13"></script>
+  <script src="assets/js/app.js?v=14"></script>
 
   <!-- PWA 註冊 -->
   <script>
