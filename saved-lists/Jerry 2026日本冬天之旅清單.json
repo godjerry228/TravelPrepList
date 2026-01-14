@@ -1,0 +1,403 @@
+{
+    "categories": [
+        {
+            "name": "重要資料文件",
+            "order": 4,
+            "items": [
+                {
+                    "name": "機票",
+                    "order": 3,
+                    "priority": 5
+                },
+                {
+                    "name": "護照",
+                    "order": 7,
+                    "priority": 5
+                },
+                {
+                    "name": "Visit Japan",
+                    "order": 19,
+                    "priority": 4
+                },
+                {
+                    "name": "證件",
+                    "order": 27,
+                    "priority": 2
+                },
+                {
+                    "name": "個人照片 (2 張)",
+                    "order": 35,
+                    "priority": 0
+                },
+                {
+                    "name": "外幣",
+                    "order": 23,
+                    "priority": 5
+                },
+                {
+                    "name": "信用卡、提款卡",
+                    "order": 31,
+                    "priority": 1
+                },
+                {
+                    "name": "國際駕照（或日文譯本）",
+                    "order": 11,
+                    "priority": 5
+                },
+                {
+                    "name": "國內駕照",
+                    "order": 15,
+                    "priority": 5
+                }
+            ]
+        },
+        {
+            "name": "行程文件資料",
+            "order": 9,
+            "items": [
+                {
+                    "name": "行程表、旅遊書 (電子地圖)",
+                    "order": 7,
+                    "priority": 3
+                },
+                {
+                    "name": "出國採購清單",
+                    "order": 19,
+                    "priority": 1
+                },
+                {
+                    "name": "旅館資料 (地址、電話、網址)",
+                    "order": 11,
+                    "priority": 3
+                },
+                {
+                    "name": "相關電子票券",
+                    "order": 23,
+                    "priority": 1
+                },
+                {
+                    "name": "自駕租車資訊",
+                    "order": 3,
+                    "priority": 4
+                }
+            ]
+        },
+        {
+            "name": "電子電器用品",
+            "order": 14,
+            "items": [
+                {
+                    "name": "筆電\/電源\/電源線",
+                    "order": 15,
+                    "priority": 4
+                },
+                {
+                    "name": "單眼相機\/電池\/充電器",
+                    "order": 3,
+                    "priority": 5
+                },
+                {
+                    "name": "記憶卡、讀卡機",
+                    "order": 11,
+                    "priority": 4
+                },
+                {
+                    "name": "手機 (電池\/充電器\/開機鈕)",
+                    "order": 39,
+                    "priority": 2
+                },
+                {
+                    "name": "GoPro\/電池\/遙控器",
+                    "order": 23,
+                    "priority": 4
+                },
+                {
+                    "name": "GoPro汽車架",
+                    "order": 27,
+                    "priority": 4
+                },
+                {
+                    "name": "相機腳架",
+                    "order": 43,
+                    "priority": 3
+                },
+                {
+                    "name": "行動電源及其配件",
+                    "order": 19,
+                    "priority": 4
+                },
+                {
+                    "name": "USB 充電線",
+                    "order": 35,
+                    "priority": 3
+                },
+                {
+                    "name": "閃光燈\/閃燈電池\/充電器",
+                    "order": 47,
+                    "priority": 0
+                },
+                {
+                    "name": "手機汽車架",
+                    "order": 31,
+                    "priority": 4
+                },
+                {
+                    "name": "隨身電扇",
+                    "order": 55,
+                    "priority": 0
+                },
+                {
+                    "name": "離子夾",
+                    "order": 7,
+                    "priority": 5
+                }
+            ]
+        },
+        {
+            "name": "常備藥品",
+            "order": 29,
+            "items": [
+                {
+                    "name": "頭痛藥",
+                    "order": 3,
+                    "priority": 4
+                },
+                {
+                    "name": "皮膚膏",
+                    "order": 7,
+                    "priority": 2
+                },
+                {
+                    "name": "體溫計",
+                    "order": 27,
+                    "priority": 0
+                },
+                {
+                    "name": "止瀉藥",
+                    "order": 11,
+                    "priority": 2
+                },
+                {
+                    "name": "退燒藥",
+                    "order": 15,
+                    "priority": 1
+                },
+                {
+                    "name": "感冒藥",
+                    "order": 19,
+                    "priority": 1
+                },
+                {
+                    "name": "綠油精",
+                    "order": 31,
+                    "priority": 0
+                },
+                {
+                    "name": "安眠藥",
+                    "order": 35,
+                    "priority": 0
+                },
+                {
+                    "name": "金創藥",
+                    "order": 39,
+                    "priority": 0
+                },
+                {
+                    "name": "防蚊液",
+                    "order": 43,
+                    "priority": 0
+                },
+                {
+                    "name": "OK 繃",
+                    "order": 23,
+                    "priority": 0
+                }
+            ]
+        },
+        {
+            "name": "盥洗用品 \/ 保養品",
+            "order": 24,
+            "items": [
+                {
+                    "name": "洗髮髮乳、沐浴乳、洗面乳、牙刷、牙膏",
+                    "order": 19,
+                    "priority": 0
+                },
+                {
+                    "name": "浴巾\/毛巾",
+                    "order": 23,
+                    "priority": 0
+                },
+                {
+                    "name": "隱形眼鏡、眼鏡盒",
+                    "order": 15,
+                    "priority": 2
+                },
+                {
+                    "name": "隱形眼鏡藥水 \/ 生理食鹽水",
+                    "order": 7,
+                    "priority": 4
+                },
+                {
+                    "name": "晚上眼鏡",
+                    "order": 3,
+                    "priority": 5
+                },
+                {
+                    "name": "防曬霜",
+                    "order": 27,
+                    "priority": 0
+                },
+                {
+                    "name": "刮鬍刀",
+                    "order": 11,
+                    "priority": 2
+                }
+            ]
+        },
+        {
+            "name": "衣物",
+            "order": 19,
+            "items": [
+                {
+                    "name": "上衣、毛衣、發熱衣",
+                    "order": 3,
+                    "priority": 5
+                },
+                {
+                    "name": "褲子、短褲",
+                    "order": 31,
+                    "priority": 0
+                },
+                {
+                    "name": "冬天圍巾",
+                    "order": 11,
+                    "priority": 4
+                },
+                {
+                    "name": "外套、風衣、雪衣、羽絨外套",
+                    "order": 19,
+                    "priority": 1
+                },
+                {
+                    "name": "手套、毛帽",
+                    "order": 15,
+                    "priority": 4
+                },
+                {
+                    "name": "運動鞋、休閒鞋",
+                    "order": 35,
+                    "priority": 0
+                },
+                {
+                    "name": "拖鞋、涼鞋",
+                    "order": 39,
+                    "priority": 0
+                },
+                {
+                    "name": "睡衣",
+                    "order": 23,
+                    "priority": 2
+                },
+                {
+                    "name": "帽子",
+                    "order": 27,
+                    "priority": 2
+                },
+                {
+                    "name": "冬天大衣",
+                    "order": 7,
+                    "priority": 4
+                }
+            ]
+        },
+        {
+            "name": "日用品",
+            "order": 34,
+            "items": [
+                {
+                    "name": "指甲刀、小剪刀",
+                    "order": 11,
+                    "priority": 0
+                },
+                {
+                    "name": "太陽眼鏡",
+                    "order": 7,
+                    "priority": 0
+                },
+                {
+                    "name": "眼鏡布",
+                    "order": 15,
+                    "priority": 0
+                },
+                {
+                    "name": "手電筒、頭燈",
+                    "order": 19,
+                    "priority": 0
+                },
+                {
+                    "name": "耳塞",
+                    "order": 23,
+                    "priority": 0
+                },
+                {
+                    "name": "防水袋、防潮袋",
+                    "order": 31,
+                    "priority": 0
+                },
+                {
+                    "name": "吹風機",
+                    "order": 35,
+                    "priority": 0
+                },
+                {
+                    "name": "床單、睡袋",
+                    "order": 39,
+                    "priority": 0
+                },
+                {
+                    "name": "雨傘 \/ 雨衣",
+                    "order": 27,
+                    "priority": 0
+                },
+                {
+                    "name": "自拍桿",
+                    "order": 3,
+                    "priority": 1
+                }
+            ]
+        },
+        {
+            "name": "餐具",
+            "order": 39,
+            "items": [
+                {
+                    "name": "保溫瓶",
+                    "order": 3,
+                    "priority": 4
+                },
+                {
+                    "name": "水壺、水杯",
+                    "order": 7,
+                    "priority": 1
+                }
+            ]
+        },
+        {
+            "name": "打包準備",
+            "order": 44,
+            "items": [
+                {
+                    "name": "預留空間",
+                    "order": 7,
+                    "priority": 0
+                },
+                {
+                    "name": "行李電子秤",
+                    "order": 3,
+                    "priority": 5
+                }
+            ]
+        }
+    ]
+}
