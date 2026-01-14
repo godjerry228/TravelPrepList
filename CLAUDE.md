@@ -92,3 +92,13 @@ assets/js/
 
 - **暫存檔排除**: `tmpclaude-*` 為 Claude Code 產生的暫存檔，已加入 `.gitignore`，部署時不要推送到 GitHub
 - **本地設定排除**: `.claude/settings.local.json` 為本地設定，不應推送
+
+### Git 提交前置作業（必須執行）
+
+每次執行 `git commit` 或部署前，**必須先清理暫存檔**：
+
+```bash
+rm -f tmpclaude-*
+```
+
+此步驟確保暫存檔不會意外被提交。
