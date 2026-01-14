@@ -1,24 +1,13 @@
-// 主應用程式 - 多用戶模式
+// 主應用程式 - 共用清單模式（資料儲存於伺服器）
 const App = {
-  STORAGE_KEY_BASE: 'travelChecklistData',
   sortableInstances: [],
-
-  // 取得當前用戶的 Storage Key
-  getStorageKey() {
-    return Auth.getUserStorageKey(this.STORAGE_KEY_BASE);
-  },
-
-  // 取得當前用戶的已儲存清單 Key
-  getSavedChecklistsKey() {
-    return Auth.getUserStorageKey('savedChecklists');
-  },
+  currentData: { categories: [] },
+  currentListName: null, // 目前載入的清單名稱
 
   // 啟動應用程式（入口點）
   start() {
-    // 綁定登入相關事件
     this.bindAuthEvents();
 
-    // 檢查登入狀態
     if (Auth.isLoggedIn()) {
       this.showApp();
       this.init();
@@ -37,65 +26,19 @@ const App = {
   showApp() {
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('appContainer').classList.remove('hidden');
-
-    // 更新當前用戶顯示
-    const user = Auth.getCurrentUser();
-    if (user) {
-      document.getElementById('currentUsername').textContent = user.username;
-    }
   },
 
   // 綁定登入相關事件
   bindAuthEvents() {
-    // 登入表單
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const username = document.getElementById('loginUsername').value.trim();
       const password = document.getElementById('loginPassword').value;
 
       try {
-        await Auth.login(username, password);
+        await Auth.login(password);
         this.showApp();
         this.init();
-        this.showToast(`歡迎回來，${username}！`, 'success');
-      } catch (error) {
-        this.showToast(error.message, 'error');
-      }
-    });
-
-    // 顯示註冊表單
-    document.getElementById('showRegisterBtn').addEventListener('click', () => {
-      document.getElementById('loginForm').classList.add('hidden');
-      document.getElementById('showRegisterBtn').classList.add('hidden');
-      document.querySelector('.login-divider').classList.add('hidden');
-      document.getElementById('registerForm').classList.remove('hidden');
-    });
-
-    // 返回登入
-    document.getElementById('backToLoginBtn').addEventListener('click', () => {
-      document.getElementById('registerForm').classList.add('hidden');
-      document.getElementById('loginForm').classList.remove('hidden');
-      document.getElementById('showRegisterBtn').classList.remove('hidden');
-      document.querySelector('.login-divider').classList.remove('hidden');
-    });
-
-    // 註冊表單
-    document.getElementById('registerForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const username = document.getElementById('registerUsername').value.trim();
-      const password = document.getElementById('registerPassword').value;
-      const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
-
-      if (password !== passwordConfirm) {
-        this.showToast('兩次輸入的密碼不一致', 'error');
-        return;
-      }
-
-      try {
-        await Auth.register(username, password);
-        this.showApp();
-        this.init();
-        this.showToast(`註冊成功！歡迎 ${username}`, 'success');
+        this.showToast('登入成功！', 'success');
       } catch (error) {
         this.showToast(error.message, 'error');
       }
@@ -106,48 +49,20 @@ const App = {
   handleLogout() {
     Auth.logout();
     this.showLogin();
-
-    // 清空表單
-    document.getElementById('loginUsername').value = '';
     document.getElementById('loginPassword').value = '';
-    document.getElementById('registerUsername').value = '';
-    document.getElementById('registerPassword').value = '';
-    document.getElementById('registerPasswordConfirm').value = '';
-
-    // 重設為登入表單
-    document.getElementById('registerForm').classList.add('hidden');
-    document.getElementById('loginForm').classList.remove('hidden');
-    document.getElementById('showRegisterBtn').classList.remove('hidden');
-    document.querySelector('.login-divider').classList.remove('hidden');
-
     this.showToast('已登出', 'info');
   },
 
   // 初始化應用程式（登入後）
   async init() {
     try {
-      // 載入用戶清單資料
-      await this.loadUserData();
-
-      // 渲染介面
+      await this.loadDefaultChecklist();
       await this.renderChecklist();
       await this.updateStats();
-
-      // 綁定事件
       this.bindEvents();
     } catch (error) {
       console.error('初始化失敗:', error);
       this.showToast('初始化失敗: ' + error.message, 'error');
-    }
-  },
-
-  // 載入用戶資料
-  async loadUserData() {
-    const savedData = localStorage.getItem(this.getStorageKey());
-
-    if (!savedData) {
-      // 初次使用，載入預設清單
-      await this.loadDefaultChecklist();
     }
   },
 
@@ -157,7 +72,7 @@ const App = {
       const response = await fetch('data/default-checklist.json');
       const data = await response.json();
 
-      const checklistData = {
+      this.currentData = {
         categories: data.categories.map(cat => ({
           id: Date.now() + Math.random(),
           name: cat.name,
@@ -171,8 +86,7 @@ const App = {
           }))
         }))
       };
-
-      localStorage.setItem(this.getStorageKey(), JSON.stringify(checklistData));
+      this.currentListName = null;
     } catch (error) {
       console.error('載入預設清單失敗:', error);
       throw error;
@@ -181,13 +95,12 @@ const App = {
 
   // 取得清單資料
   getData() {
-    const data = localStorage.getItem(this.getStorageKey());
-    return data ? JSON.parse(data) : { categories: [] };
+    return this.currentData;
   },
 
-  // 儲存清單資料
+  // 儲存清單資料（記憶體中）
   saveData(data) {
-    localStorage.setItem(this.getStorageKey(), JSON.stringify(data));
+    this.currentData = data;
   },
 
   // 渲染清單
@@ -208,19 +121,16 @@ const App = {
     this.sortableInstances.forEach(s => s.destroy());
     this.sortableInstances = [];
 
-    // 排序分類
     data.categories.sort((a, b) => a.order - b.order);
 
     grid.innerHTML = data.categories.map((cat, index) => this.renderCategory(cat, index)).join('');
 
-    // 初始化分類拖曳排序
     new Sortable(grid, {
       animation: 150,
       handle: '.category-drag-handle',
       onEnd: () => this.saveCategoryOrder()
     });
 
-    // 初始化每個分類內的物品拖曳排序
     data.categories.forEach(cat => {
       const itemList = document.getElementById(`items-${cat.id}`);
       if (itemList) {
@@ -256,7 +166,6 @@ const App = {
 
     return `
       <div class="category-card animate-fade-in" data-category-id="${category.id}">
-        <!-- 分類標題 -->
         <div class="category-header">
           <div class="category-drag-handle drag-handle">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -277,7 +186,6 @@ const App = {
           </button>
         </div>
 
-        <!-- 物品列表 -->
         <div id="items-${category.id}" class="item-list">
           ${items.map(item => this.renderItem(item)).join('')}
         </div>
@@ -287,7 +195,7 @@ const App = {
     `;
   },
 
-  // 渲染單一物品（簡化版：長按/右鍵/更多按鈕開啟選單）
+  // 渲染單一物品
   renderItem(item) {
     const priority = item.priority || 0;
     const priorityDots = this.renderPriorityDots(priority);
@@ -330,7 +238,6 @@ const App = {
 
   // 綁定事件
   bindEvents() {
-    // 選單按鈕
     document.getElementById('menuBtn').addEventListener('click', () => {
       this.toggleMenu(true);
     });
@@ -339,14 +246,12 @@ const App = {
       this.toggleMenu(false);
     });
 
-    // 點擊選單背景關閉（點擊空白處）
     document.getElementById('fullscreenMenu').addEventListener('click', (e) => {
       if (e.target.id === 'fullscreenMenu') {
         this.toggleMenu(false);
       }
     });
 
-    // 選單內的功能按鈕
     document.getElementById('addCategoryBtn').addEventListener('click', () => {
       this.toggleMenu(false);
       this.showAddCategoryModal();
@@ -374,9 +279,7 @@ const App = {
 
     const grid = document.getElementById('checklistGrid');
 
-    // 點擊事件
     grid.addEventListener('click', async (e) => {
-      // 處理物品「更多」按鈕
       if (e.target.closest('.item-more-btn')) {
         e.stopPropagation();
         const btn = e.target.closest('.item-more-btn');
@@ -384,7 +287,6 @@ const App = {
         return;
       }
 
-      // 處理分類「更多」按鈕
       if (e.target.closest('.category-more-btn')) {
         e.stopPropagation();
         const btn = e.target.closest('.category-more-btn');
@@ -392,7 +294,6 @@ const App = {
         return;
       }
 
-      // 處理項目列點擊（打勾）- 排除拖曳手柄和更多按鈕
       const itemRow = e.target.closest('.item-row');
       if (itemRow && !e.target.closest('.drag-handle') && !e.target.closest('.item-more-btn')) {
         this.handleItemCheck(itemRow.dataset.itemId, itemRow);
@@ -439,20 +340,17 @@ const App = {
   async showItemActionMenu(itemId) {
     const data = this.getData();
     let foundItem = null;
-    let foundCat = null;
 
     for (const cat of data.categories) {
       const item = cat.items.find(i => String(i.id) === String(itemId));
       if (item) {
         foundItem = item;
-        foundCat = cat;
         break;
       }
     }
 
     if (!foundItem) return;
 
-    // 震動回饋（如果支援）
     if (navigator.vibrate) {
       navigator.vibrate(50);
     }
@@ -506,7 +404,6 @@ const App = {
           star.addEventListener('click', function() {
             selectedRating = parseInt(this.dataset.value);
             updateStars(selectedRating);
-            // 立即儲存星星變更
             foundItem.priority = selectedRating;
             App.saveData(data);
             App.renderChecklist();
@@ -526,7 +423,6 @@ const App = {
     });
 
     if (result.isConfirmed) {
-      // 編輯名稱
       const { value: newName } = await Swal.fire({
         title: '編輯物品名稱',
         input: 'text',
@@ -546,7 +442,6 @@ const App = {
         this.showToast('已更新物品名稱', 'success');
       }
     } else if (result.isDenied) {
-      // 刪除物品
       const confirmDelete = await Swal.fire({
         title: '確定刪除？',
         text: `確定要刪除「${foundItem.name}」嗎？`,
@@ -587,7 +482,6 @@ const App = {
         item.checked = !item.checked;
         this.saveData(data);
 
-        // 立即更新 UI 而不重新渲染整個列表
         if (item.checked) {
           itemRow.classList.add('checked');
           const checkCircle = itemRow.querySelector('.check-circle');
@@ -596,7 +490,6 @@ const App = {
           itemRow.classList.remove('checked');
         }
 
-        // 更新分類進度
         this.updateCategoryProgress(cat.id);
         this.updateStats();
         return;
@@ -734,7 +627,6 @@ const App = {
     progressBar.style.width = `${percentage}%`;
     progressText.textContent = `${percentage}%`;
 
-    // 根據進度改變顏色等級和標語
     let slogan = '';
     let levelClass = '';
     let sloganColor = '';
@@ -767,110 +659,7 @@ const App = {
 
     progressSlogan.textContent = slogan;
     progressSlogan.className = `progress-slogan ${sloganColor}`;
-
-    // 更新進度條顏色等級
     progressBar.className = `progress-bar-fill ${levelClass}`;
-  },
-
-  // 編輯物品
-  async editItem(itemId) {
-    const data = this.getData();
-    let foundItem = null;
-
-    for (const cat of data.categories) {
-      const item = cat.items.find(i => String(i.id) === String(itemId));
-      if (item) {
-        foundItem = item;
-        break;
-      }
-    }
-
-    if (!foundItem) return;
-
-    const currentPriority = foundItem.priority || 0;
-
-    const result = await Swal.fire({
-      title: '編輯物品',
-      html: `
-        <div class="space-y-4">
-          <div>
-            <label class="block text-left text-sm font-medium text-gray-700 mb-2">物品名稱</label>
-            <input id="item-name-input" type="text" value="${foundItem.name}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-          </div>
-          <div>
-            <label class="block text-left text-sm font-medium text-gray-700 mb-2">重要程度</label>
-            <div id="star-rating" class="flex gap-1 justify-center text-3xl cursor-pointer mb-2">
-              <span class="star" data-value="1">☆</span>
-              <span class="star" data-value="2">☆</span>
-              <span class="star" data-value="3">☆</span>
-              <span class="star" data-value="4">☆</span>
-              <span class="star" data-value="5">☆</span>
-            </div>
-            <div class="text-center">
-              <button id="clear-stars-btn" type="button" class="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300">清除星號</button>
-            </div>
-          </div>
-        </div>
-      `,
-      showCancelButton: true,
-      confirmButtonText: '確定',
-      cancelButtonText: '取消',
-      didOpen: () => {
-        let selectedRating = currentPriority;
-        const stars = document.querySelectorAll('.star');
-
-        const updateStars = (rating) => {
-          stars.forEach((star, index) => {
-            if (index < rating) {
-              star.textContent = '★';
-              star.style.color = '#fbbf24';
-            } else {
-              star.textContent = '☆';
-              star.style.color = '#d1d5db';
-            }
-          });
-        };
-
-        updateStars(selectedRating);
-
-        stars.forEach((star) => {
-          star.addEventListener('click', function() {
-            selectedRating = parseInt(this.dataset.value);
-            updateStars(selectedRating);
-          });
-        });
-
-        document.getElementById('clear-stars-btn').addEventListener('click', () => {
-          selectedRating = 0;
-          updateStars(0);
-        });
-      },
-      preConfirm: () => {
-        const name = document.getElementById('item-name-input').value;
-        const stars = document.querySelectorAll('.star');
-        let priority = 0;
-        stars.forEach((star, index) => {
-          if (star.textContent === '★') {
-            priority = index + 1;
-          }
-        });
-
-        if (!name) {
-          Swal.showValidationMessage('請輸入物品名稱');
-          return false;
-        }
-
-        return { name: name.trim(), priority };
-      }
-    });
-
-    if (result.isConfirmed && result.value) {
-      foundItem.name = result.value.name;
-      foundItem.priority = result.value.priority;
-      this.saveData(data);
-      this.renderChecklist();
-      this.showToast('已更新物品', 'success');
-    }
   },
 
   // 編輯分類
@@ -1033,9 +822,7 @@ const App = {
   async showResetConfirmModal() {
     const result = await Swal.fire({
       title: '重設清單選項',
-      html: `
-        <p class="mb-4">請選擇重設方式：</p>
-      `,
+      html: '<p class="mb-4">請選擇重設方式：</p>',
       showDenyButton: true,
       showCancelButton: true,
       confirmButtonText: '只清除勾選',
@@ -1067,7 +854,7 @@ const App = {
     } else if (result.isDenied) {
       const confirmRestore = await Swal.fire({
         title: '確定恢復預設清單？',
-        text: '這將清除您所有的自訂內容，無法復原',
+        text: '這將清除您目前的修改',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#ef4444',
@@ -1077,7 +864,6 @@ const App = {
       });
 
       if (confirmRestore.isConfirmed) {
-        localStorage.removeItem(this.getStorageKey());
         await this.loadDefaultChecklist();
         await this.renderChecklist();
         this.updateStats();
@@ -1093,7 +879,7 @@ const App = {
     }
   },
 
-  // 儲存清單
+  // 儲存清單到伺服器
   async saveChecklist() {
     const { value: listName } = await Swal.fire({
       title: '儲存清單',
@@ -1125,40 +911,50 @@ const App = {
     };
 
     try {
-      const savedLists = JSON.parse(localStorage.getItem(this.getSavedChecklistsKey()) || '{}');
-      savedLists[listName] = {
-        name: listName,
-        checklist: exportData,
-        modified: Date.now()
-      };
-      localStorage.setItem(this.getSavedChecklistsKey(), JSON.stringify(savedLists));
-
-      Swal.fire({
-        title: '儲存成功',
-        text: `清單「${listName}」已儲存`,
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false
+      const response = await fetch('api/save-list.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: listName, checklist: exportData })
       });
+
+      const result = await response.json();
+
+      if (result.success) {
+        Swal.fire({
+          title: '儲存成功',
+          text: `清單「${listName}」已儲存至伺服器`,
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } else {
+        throw new Error(result.message);
+      }
     } catch (error) {
       Swal.fire({
         title: '儲存失敗',
-        text: '儲存時發生錯誤',
+        text: error.message || '儲存時發生錯誤',
         icon: 'error'
       });
     }
   },
 
-  // 載入清單
+  // 從伺服器載入清單
   async loadChecklist() {
     try {
-      const savedLists = JSON.parse(localStorage.getItem(this.getSavedChecklistsKey()) || '{}');
-      const listsArray = Object.values(savedLists).sort((a, b) => b.modified - a.modified);
+      const response = await fetch('api/get-lists.php');
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+
+      const listsArray = result.lists;
 
       if (listsArray.length === 0) {
         Swal.fire({
           title: '無已儲存清單',
-          text: '目前沒有已儲存的清單',
+          text: '伺服器上沒有已儲存的清單',
           icon: 'info'
         });
         return;
@@ -1168,8 +964,8 @@ const App = {
         <div class="flex items-center justify-between p-3 border rounded-lg mb-2 hover:bg-gray-50">
           <span class="flex-1 text-left">${list.name}</span>
           <div class="flex gap-2">
-            <button class="load-list-btn px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm" data-listname="${list.name}">載入</button>
-            <button class="delete-list-btn px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm" data-listname="${list.name}">刪除</button>
+            <button class="load-list-btn px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm" data-filename="${list.filename}">載入</button>
+            <button class="delete-list-btn px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm" data-filename="${list.filename}" data-name="${list.name}">刪除</button>
           </div>
         </div>
       `).join('');
@@ -1183,19 +979,20 @@ const App = {
         didOpen: () => {
           document.querySelectorAll('.load-list-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
-              const listName = btn.dataset.listname;
+              const filename = btn.dataset.filename;
               Swal.close();
-              await this.performLoadChecklist(listName);
+              await this.performLoadChecklist(filename);
             });
           });
 
           document.querySelectorAll('.delete-list-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
-              const listName = btn.dataset.listname;
+              const filename = btn.dataset.filename;
+              const name = btn.dataset.name;
 
               const confirmDelete = await Swal.fire({
                 title: '確定刪除？',
-                text: `確定要刪除「${listName}」清單嗎？此操作無法復原`,
+                text: `確定要刪除「${name}」清單嗎？此操作無法復原`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#ef4444',
@@ -1205,7 +1002,7 @@ const App = {
               });
 
               if (confirmDelete.isConfirmed) {
-                await this.deleteChecklist(listName);
+                await this.deleteChecklist(filename);
                 Swal.close();
                 this.loadChecklist();
               }
@@ -1216,29 +1013,15 @@ const App = {
     } catch (error) {
       Swal.fire({
         title: '載入失敗',
-        text: '載入時發生錯誤',
+        text: error.message || '載入時發生錯誤',
         icon: 'error'
       });
     }
   },
 
   // 執行載入清單
-  async performLoadChecklist(listName) {
+  async performLoadChecklist(filename) {
     try {
-      if (!listName) return;
-
-      const savedLists = JSON.parse(localStorage.getItem(this.getSavedChecklistsKey()) || '{}');
-      const savedList = savedLists[listName];
-
-      if (!savedList) {
-        Swal.fire({
-          title: '載入失敗',
-          text: '找不到此清單',
-          icon: 'error'
-        });
-        return;
-      }
-
       const confirmResult = await Swal.fire({
         title: '確定載入清單？',
         text: '這將會覆蓋目前的清單內容（所有勾選狀態將被清除）',
@@ -1250,55 +1033,70 @@ const App = {
         cancelButtonText: '取消'
       });
 
-      if (confirmResult.isConfirmed) {
-        const newData = {
-          categories: savedList.checklist.categories.map(cat => ({
-            id: Date.now() + Math.random(),
-            name: cat.name,
-            order: cat.order,
-            items: cat.items.map(item => ({
-              id: Date.now() + Math.random(),
-              name: item.name,
-              order: item.order,
-              checked: false,
-              priority: item.priority || 0
-            }))
-          }))
-        };
+      if (!confirmResult.isConfirmed) return;
 
-        this.saveData(newData);
-        this.renderChecklist();
-        this.updateStats();
+      const response = await fetch(`api/load-list.php?filename=${encodeURIComponent(filename)}`);
+      const result = await response.json();
 
-        Swal.fire({
-          title: '載入成功',
-          text: '清單已更新',
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false
-        });
+      if (!result.success) {
+        throw new Error(result.message);
       }
+
+      this.currentData = {
+        categories: result.checklist.categories.map(cat => ({
+          id: Date.now() + Math.random(),
+          name: cat.name,
+          order: cat.order,
+          items: cat.items.map(item => ({
+            id: Date.now() + Math.random(),
+            name: item.name,
+            order: item.order,
+            checked: false,
+            priority: item.priority || 0
+          }))
+        }))
+      };
+
+      this.currentListName = filename.replace('.json', '');
+      this.renderChecklist();
+      this.updateStats();
+
+      Swal.fire({
+        title: '載入成功',
+        text: '清單已更新',
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false
+      });
     } catch (error) {
       Swal.fire({
         title: '載入失敗',
-        text: '載入時發生錯誤',
+        text: error.message || '載入時發生錯誤',
         icon: 'error'
       });
     }
   },
 
-  // 刪除清單
-  async deleteChecklist(listName) {
+  // 刪除伺服器上的清單
+  async deleteChecklist(filename) {
     try {
-      const savedLists = JSON.parse(localStorage.getItem(this.getSavedChecklistsKey()) || '{}');
-      delete savedLists[listName];
-      localStorage.setItem(this.getSavedChecklistsKey(), JSON.stringify(savedLists));
+      const response = await fetch('api/delete-list.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename })
+      });
 
-      this.showToast('清單已刪除', 'success');
+      const result = await response.json();
+
+      if (result.success) {
+        this.showToast('清單已刪除', 'success');
+      } else {
+        throw new Error(result.message);
+      }
     } catch (error) {
       Swal.fire({
         title: '刪除失敗',
-        text: '刪除時發生錯誤',
+        text: error.message || '刪除時發生錯誤',
         icon: 'error'
       });
     }

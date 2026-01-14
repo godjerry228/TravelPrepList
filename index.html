@@ -36,42 +36,14 @@
     <div class="login-container">
       <div class="login-icon">🔐</div>
       <h1 class="login-title">旅遊準備清單</h1>
-      <p class="login-subtitle">請登入以使用您的清單</p>
+      <p class="login-subtitle">請輸入密碼以使用清單</p>
 
       <form id="loginForm" class="login-form">
-        <div class="login-input-group">
-          <label for="loginUsername">帳號</label>
-          <input type="text" id="loginUsername" placeholder="請輸入帳號" autocomplete="username" required>
-        </div>
         <div class="login-input-group">
           <label for="loginPassword">密碼</label>
           <input type="password" id="loginPassword" placeholder="請輸入密碼" autocomplete="current-password" required>
         </div>
         <button type="submit" id="loginBtn" class="login-submit-btn">登入</button>
-      </form>
-
-      <div class="login-divider">
-        <span>或</span>
-      </div>
-
-      <button id="showRegisterBtn" class="login-register-btn">註冊新帳號</button>
-
-      <!-- 註冊表單（預設隱藏） -->
-      <form id="registerForm" class="login-form hidden">
-        <div class="login-input-group">
-          <label for="registerUsername">帳號</label>
-          <input type="text" id="registerUsername" placeholder="請設定帳號（至少 2 字元）" autocomplete="username" required>
-        </div>
-        <div class="login-input-group">
-          <label for="registerPassword">密碼</label>
-          <input type="password" id="registerPassword" placeholder="請設定密碼（至少 4 字元）" autocomplete="new-password" required>
-        </div>
-        <div class="login-input-group">
-          <label for="registerPasswordConfirm">確認密碼</label>
-          <input type="password" id="registerPasswordConfirm" placeholder="請再次輸入密碼" autocomplete="new-password" required>
-        </div>
-        <button type="submit" id="registerBtn" class="login-submit-btn">註冊並登入</button>
-        <button type="button" id="backToLoginBtn" class="login-back-btn">返回登入</button>
       </form>
     </div>
   </div>
@@ -205,15 +177,14 @@
           </div>
           <div class="menu-item-text">
             <div class="menu-item-title">登出</div>
-            <div class="menu-item-desc">切換其他帳號</div>
+            <div class="menu-item-desc">返回登入畫面</div>
           </div>
         </button>
       </div>
 
       <!-- 選單底部 -->
       <div class="fullscreen-menu-footer">
-        <div id="currentUserDisplay" class="current-user">👤 <span id="currentUsername">-</span></div>
-        <div>v1.2.0 • Made with ❤️</div>
+        <div>v1.3.0 • Made with ❤️</div>
       </div>
     </div>
   </div>
@@ -224,11 +195,8 @@
   </div><!-- /appContainer -->
 
   <!-- JavaScript 模組 -->
-  <script src="assets/js/auth.js?v=1"></script>
-  <script src="assets/js/storage.js?v=8"></script>
-  <script src="assets/js/user.js?v=8"></script>
-  <script src="assets/js/checklist.js?v=8"></script>
-  <script src="assets/js/app.js?v=14"></script>
+  <script src="assets/js/auth.js?v=2"></script>
+  <script src="assets/js/app.js?v=15"></script>
 
   <!-- PWA 註冊 -->
   <script>
