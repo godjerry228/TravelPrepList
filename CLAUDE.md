@@ -84,6 +84,11 @@ assets/js/
 ## 開發注意事項
 
 - JS 檔案載入時使用版本號參數（`?v=7`），更新時需同步修改 `index.html`
-- Service Worker 快取版本 `CACHE_VERSION = 'v1'`，更新靜態資源時需修改
+- Service Worker 快取版本 `CACHE_VERSION = 'v2'`，更新靜態資源時需修改
 - 預設清單位於 `data/default-checklist.json`
 - PWA 圖示位於 `assets/icons/` 和 `AppImages/`
+
+## Git 部署注意事項
+
+- **暫存檔排除**: `tmpclaude-*` 為 Claude Code 產生的暫存檔，已加入 `.gitignore`，部署時不要推送到 GitHub
+- **本地設定排除**: `.claude/settings.local.json` 為本地設定，不應推送
