@@ -11,8 +11,10 @@ Thumbs.db
 *.swp
 *.swo
 
-# 本地設定
-.claude/settings.local.json
+# 本地設定（不上傳 GitHub）
+.claude/
+CLAUDE.md
+START.md
 
 # 本地清單資料（不上傳 GitHub）
 saved-lists/
