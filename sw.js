@@ -1,5 +1,5 @@
 // Service Worker
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v5';
 const CACHE_NAME = `travel-checklist-${CACHE_VERSION}`;
 
 // 需要快取的靜態資源
@@ -8,6 +8,7 @@ const STATIC_CACHE = [
   '/index.html',
   '/manifest.json',
   '/assets/css/app.css',
+  '/assets/js/auth.js',
   '/assets/js/storage.js',
   '/assets/js/user.js',
   '/assets/js/checklist.js',

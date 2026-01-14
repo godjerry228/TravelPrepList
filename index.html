@@ -20,7 +20,7 @@
   <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
 
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="assets/css/app.css?v=14">
+  <link rel="stylesheet" href="assets/css/app.css?v=15">
 
   <!-- SortableJS CDN -->
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
@@ -30,6 +30,54 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="bg-gradient-main min-h-screen">
+
+  <!-- 登入畫面 -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-container">
+      <div class="login-icon">🔐</div>
+      <h1 class="login-title">旅遊準備清單</h1>
+      <p class="login-subtitle">請登入以使用您的清單</p>
+
+      <form id="loginForm" class="login-form">
+        <div class="login-input-group">
+          <label for="loginUsername">帳號</label>
+          <input type="text" id="loginUsername" placeholder="請輸入帳號" autocomplete="username" required>
+        </div>
+        <div class="login-input-group">
+          <label for="loginPassword">密碼</label>
+          <input type="password" id="loginPassword" placeholder="請輸入密碼" autocomplete="current-password" required>
+        </div>
+        <button type="submit" id="loginBtn" class="login-submit-btn">登入</button>
+      </form>
+
+      <div class="login-divider">
+        <span>或</span>
+      </div>
+
+      <button id="showRegisterBtn" class="login-register-btn">註冊新帳號</button>
+
+      <!-- 註冊表單（預設隱藏） -->
+      <form id="registerForm" class="login-form hidden">
+        <div class="login-input-group">
+          <label for="registerUsername">帳號</label>
+          <input type="text" id="registerUsername" placeholder="請設定帳號（至少 2 字元）" autocomplete="username" required>
+        </div>
+        <div class="login-input-group">
+          <label for="registerPassword">密碼</label>
+          <input type="password" id="registerPassword" placeholder="請設定密碼（至少 4 字元）" autocomplete="new-password" required>
+        </div>
+        <div class="login-input-group">
+          <label for="registerPasswordConfirm">確認密碼</label>
+          <input type="password" id="registerPasswordConfirm" placeholder="請再次輸入密碼" autocomplete="new-password" required>
+        </div>
+        <button type="submit" id="registerBtn" class="login-submit-btn">註冊並登入</button>
+        <button type="button" id="backToLoginBtn" class="login-back-btn">返回登入</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 主應用程式容器 -->
+  <div id="appContainer" class="hidden">
 
   <!-- 選單按鈕 (固定右上角) -->
   <button id="menuBtn" class="menu-btn glass-dark">
@@ -146,12 +194,26 @@
             <div class="menu-item-desc">清除勾選或恢復預設</div>
           </div>
         </button>
+
+        <div class="menu-divider"></div>
+
+        <button id="logoutBtn" class="menu-item logout">
+          <div class="menu-item-icon red">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+            </svg>
+          </div>
+          <div class="menu-item-text">
+            <div class="menu-item-title">登出</div>
+            <div class="menu-item-desc">切換其他帳號</div>
+          </div>
+        </button>
       </div>
 
       <!-- 選單底部 -->
       <div class="fullscreen-menu-footer">
-        <strong>旅遊清單檢查</strong>
-        v1.1.0 • Made with ❤️
+        <div id="currentUserDisplay" class="current-user">👤 <span id="currentUsername">-</span></div>
+        <div>v1.2.0 • Made with ❤️</div>
       </div>
     </div>
   </div>
@@ -159,11 +221,14 @@
   <!-- 隱藏的檔案輸入 -->
   <input type="file" id="importFileInput" accept=".json" style="display: none;">
 
+  </div><!-- /appContainer -->
+
   <!-- JavaScript 模組 -->
+  <script src="assets/js/auth.js?v=1"></script>
   <script src="assets/js/storage.js?v=8"></script>
   <script src="assets/js/user.js?v=8"></script>
   <script src="assets/js/checklist.js?v=8"></script>
-  <script src="assets/js/app.js?v=12"></script>
+  <script src="assets/js/app.js?v=14"></script>
 
   <!-- PWA 註冊 -->
   <script>
