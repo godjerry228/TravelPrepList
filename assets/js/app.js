@@ -230,7 +230,7 @@ const App = {
     `;
   },
 
-  // 渲染單一物品
+  // 渲染單一物品（簡化版：長按/右鍵/更多按鈕開啟選單）
   renderItem(item) {
     const priority = item.priority || 0;
     const priorityDots = this.renderPriorityDots(priority);
@@ -250,18 +250,11 @@ const App = {
         </div>
         <span class="item-name">${item.name}</span>
         ${priorityDots}
-        <div class="item-actions">
-          <button class="item-action-btn edit-item-btn text-blue-500" data-item-id="${item.id}" title="編輯">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-            </svg>
-          </button>
-          <button class="item-action-btn delete-item-btn text-red-400" data-item-id="${item.id}" title="刪除">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-          </button>
-        </div>
+        <button class="item-more-btn" data-item-id="${item.id}" title="更多選項">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
+          </svg>
+        </button>
       </div>
     `;
   },
@@ -317,20 +310,65 @@ const App = {
       this.showResetConfirmModal();
     });
 
-    document.getElementById('checklistGrid').addEventListener('click', async (e) => {
-      // 優先處理按鈕點擊
-      if (e.target.closest('.edit-item-btn')) {
-        const btn = e.target.closest('.edit-item-btn');
-        this.editItem(btn.dataset.itemId);
+    const grid = document.getElementById('checklistGrid');
+
+    // 長按計時器
+    let longPressTimer = null;
+    let longPressTriggered = false;
+
+    // 長按開始（觸控）
+    grid.addEventListener('touchstart', (e) => {
+      const itemRow = e.target.closest('.item-row');
+      if (itemRow && !e.target.closest('.drag-handle')) {
+        longPressTriggered = false;
+        longPressTimer = setTimeout(() => {
+          longPressTriggered = true;
+          this.showItemActionMenu(itemRow.dataset.itemId);
+        }, 500); // 500ms 長按觸發
+      }
+    }, { passive: true });
+
+    // 長按取消（觸控移動或結束）
+    grid.addEventListener('touchmove', () => {
+      if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+      }
+    }, { passive: true });
+
+    grid.addEventListener('touchend', () => {
+      if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+      }
+    });
+
+    // 右鍵選單（桌面版）
+    grid.addEventListener('contextmenu', (e) => {
+      const itemRow = e.target.closest('.item-row');
+      if (itemRow) {
+        e.preventDefault();
+        this.showItemActionMenu(itemRow.dataset.itemId);
+      }
+    });
+
+    // 點擊事件
+    grid.addEventListener('click', async (e) => {
+      // 如果剛觸發長按，忽略這次點擊
+      if (longPressTriggered) {
+        longPressTriggered = false;
         return;
       }
 
-      if (e.target.closest('.delete-item-btn')) {
-        const btn = e.target.closest('.delete-item-btn');
-        this.handleDeleteItem(btn.dataset.itemId);
+      // 處理「更多」按鈕（電腦版用）
+      if (e.target.closest('.item-more-btn')) {
+        e.stopPropagation();
+        const btn = e.target.closest('.item-more-btn');
+        this.showItemActionMenu(btn.dataset.itemId);
         return;
       }
 
+      // 處理分類按鈕
       if (e.target.closest('.add-item-btn')) {
         const btn = e.target.closest('.add-item-btn');
         this.showAddItemModal(btn.dataset.categoryId);
@@ -349,13 +387,142 @@ const App = {
         return;
       }
 
-      // 處理項目列點擊（打勾）- 排除拖曳手柄和操作按鈕
+      // 處理項目列點擊（打勾）- 排除拖曳手柄和更多按鈕
       const itemRow = e.target.closest('.item-row');
-      if (itemRow && !e.target.closest('.drag-handle') && !e.target.closest('.item-actions')) {
+      if (itemRow && !e.target.closest('.drag-handle') && !e.target.closest('.item-more-btn')) {
         this.handleItemCheck(itemRow.dataset.itemId, itemRow);
         return;
       }
     });
+  },
+
+  // 顯示物品操作選單（長按觸發）
+  async showItemActionMenu(itemId) {
+    const data = this.getData();
+    let foundItem = null;
+    let foundCat = null;
+
+    for (const cat of data.categories) {
+      const item = cat.items.find(i => String(i.id) === String(itemId));
+      if (item) {
+        foundItem = item;
+        foundCat = cat;
+        break;
+      }
+    }
+
+    if (!foundItem) return;
+
+    // 震動回饋（如果支援）
+    if (navigator.vibrate) {
+      navigator.vibrate(50);
+    }
+
+    const currentPriority = foundItem.priority || 0;
+
+    const result = await Swal.fire({
+      title: foundItem.name,
+      html: `
+        <div class="item-action-menu">
+          <div class="action-menu-section">
+            <label class="action-menu-label">重要程度</label>
+            <div id="star-rating" class="flex gap-2 justify-center text-3xl cursor-pointer">
+              <span class="star" data-value="1">☆</span>
+              <span class="star" data-value="2">☆</span>
+              <span class="star" data-value="3">☆</span>
+              <span class="star" data-value="4">☆</span>
+              <span class="star" data-value="5">☆</span>
+            </div>
+            <button id="clear-stars-btn" type="button" class="text-sm text-gray-500 mt-2 underline">清除星號</button>
+          </div>
+        </div>
+      `,
+      showDenyButton: true,
+      showCancelButton: true,
+      confirmButtonText: '編輯名稱',
+      denyButtonText: '刪除物品',
+      cancelButtonText: '關閉',
+      confirmButtonColor: '#3b82f6',
+      denyButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      didOpen: () => {
+        let selectedRating = currentPriority;
+        const stars = document.querySelectorAll('.star');
+
+        const updateStars = (rating) => {
+          stars.forEach((star, index) => {
+            if (index < rating) {
+              star.textContent = '★';
+              star.style.color = '#fbbf24';
+            } else {
+              star.textContent = '☆';
+              star.style.color = '#d1d5db';
+            }
+          });
+        };
+
+        updateStars(selectedRating);
+
+        stars.forEach((star) => {
+          star.addEventListener('click', function() {
+            selectedRating = parseInt(this.dataset.value);
+            updateStars(selectedRating);
+            // 立即儲存星星變更
+            foundItem.priority = selectedRating;
+            App.saveData(data);
+            App.renderChecklist();
+            App.updateStats();
+          });
+        });
+
+        document.getElementById('clear-stars-btn').addEventListener('click', () => {
+          selectedRating = 0;
+          updateStars(0);
+          foundItem.priority = 0;
+          App.saveData(data);
+          App.renderChecklist();
+          App.updateStats();
+        });
+      }
+    });
+
+    if (result.isConfirmed) {
+      // 編輯名稱
+      const { value: newName } = await Swal.fire({
+        title: '編輯物品名稱',
+        input: 'text',
+        inputValue: foundItem.name,
+        showCancelButton: true,
+        confirmButtonText: '確定',
+        cancelButtonText: '取消',
+        inputValidator: (value) => {
+          if (!value) return '請輸入物品名稱';
+        }
+      });
+
+      if (newName && newName.trim() !== foundItem.name) {
+        foundItem.name = newName.trim();
+        this.saveData(data);
+        this.renderChecklist();
+        this.showToast('已更新物品名稱', 'success');
+      }
+    } else if (result.isDenied) {
+      // 刪除物品
+      const confirmDelete = await Swal.fire({
+        title: '確定刪除？',
+        text: `確定要刪除「${foundItem.name}」嗎？`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: '確定刪除',
+        cancelButtonText: '取消'
+      });
+
+      if (confirmDelete.isConfirmed) {
+        this.handleDeleteItem(itemId);
+      }
+    }
   },
 
   // 切換選單
