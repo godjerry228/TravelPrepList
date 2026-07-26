@@ -9,12 +9,6 @@ const App = {
     return userId ? Users.dataKey(userId) : 'tc_data_none';
   },
 
-  // 目前用戶的已存清單儲存鍵
-  get SAVED_KEY() {
-    const userId = Users.getCurrentId();
-    return userId ? Users.savedKey(userId) : 'tc_saved_none';
-  },
-
   // 啟動應用程式（入口點）
   start() {
     Users.migrateLegacyData();
@@ -98,14 +92,14 @@ const App = {
     });
   },
 
-  // 新增用戶彈窗
+  // 新增用戶彈窗（輸入名稱後選擇清單來源）
   async showAddUserModal() {
     const { value: name } = await Swal.fire({
       title: '新增用戶',
       input: 'text',
       inputPlaceholder: '請輸入用戶名稱',
       showCancelButton: true,
-      confirmButtonText: '建立',
+      confirmButtonText: '下一步',
       cancelButtonText: '取消',
       inputValidator: (value) => {
         if (!value || !value.trim()) return '請輸入用戶名稱';
@@ -115,12 +109,50 @@ const App = {
 
     if (!name) return;
 
+    // 選擇清單來源
+    const source = await Swal.fire({
+      title: `「${name.trim()}」的清單要用哪一份？`,
+      icon: 'question',
+      showDenyButton: true,
+      showCancelButton: true,
+      confirmButtonText: '使用預設清單',
+      denyButtonText: '匯入 JSON 檔案',
+      cancelButtonText: '取消',
+      confirmButtonColor: '#3b82f6',
+      denyButtonColor: '#6366f1',
+      cancelButtonColor: '#6b7280'
+    });
+
+    if (!source.isConfirmed && !source.isDenied) return;
+
+    // 選擇匯入時，先確認檔案讀取成功才建立用戶，避免留下半成品
+    let importedData = null;
+    if (source.isDenied) {
+      importedData = await this.pickChecklistFile();
+      if (!importedData) return;
+    }
+
+    let user;
     try {
-      const user = Users.create(name);
+      user = Users.create(name);
+    } catch (error) {
+      this.showAlert(error.message, 'error');
+      return;
+    }
+
+    try {
+      if (importedData) {
+        localStorage.setItem(Users.dataKey(user.id), JSON.stringify(importedData));
+      }
+      // 使用預設清單時不寫入資料，進入清單後會自動載入預設內容
+
       this.renderUserList();
       this.showToast(`已建立用戶「${user.name}」`, 'success');
     } catch (error) {
-      this.showAlert(error.message, 'error');
+      // 寫入失敗就把剛建立的用戶收回，維持資料一致
+      Users.remove(user.id);
+      this.renderUserList();
+      this.showAlert('建立失敗，可能是本機空間不足', 'error');
     }
   },
 
@@ -383,16 +415,6 @@ const App = {
     document.getElementById('addCategoryBtn').addEventListener('click', () => {
       this.toggleMenu(false);
       this.showAddCategoryModal();
-    });
-
-    document.getElementById('exportChecklistBtn').addEventListener('click', () => {
-      this.toggleMenu(false);
-      this.saveChecklist();
-    });
-
-    document.getElementById('importChecklistBtn').addEventListener('click', () => {
-      this.toggleMenu(false);
-      this.loadChecklist();
     });
 
     document.getElementById('resetAllBtn').addEventListener('click', () => {
@@ -1145,217 +1167,6 @@ const App = {
     }
   },
 
-  // 儲存清單
-  async saveChecklist() {
-    const { value: listName } = await Swal.fire({
-      title: '儲存清單',
-      input: 'text',
-      inputPlaceholder: '請輸入清單名稱',
-      showCancelButton: true,
-      confirmButtonText: '儲存',
-      cancelButtonText: '取消',
-      inputValidator: (value) => {
-        if (!value) return '請輸入清單名稱';
-        if (/[\/\\:\*\?"<>\|]/.test(value)) return '檔名不可包含特殊字元';
-      }
-    });
-
-    if (!listName) return;
-
-    const data = this.getData();
-
-    const exportData = {
-      categories: data.categories.map(cat => ({
-        name: cat.name,
-        order: cat.order,
-        items: cat.items.map(item => ({
-          name: item.name,
-          order: item.order,
-          priority: item.priority || 0
-        }))
-      }))
-    };
-
-    try {
-      const savedLists = JSON.parse(localStorage.getItem(this.SAVED_KEY) || '{}');
-      savedLists[listName] = {
-        name: listName,
-        checklist: exportData,
-        modified: Date.now()
-      };
-      localStorage.setItem(this.SAVED_KEY, JSON.stringify(savedLists));
-
-      Swal.fire({
-        title: '儲存成功',
-        text: `清單「${listName}」已儲存`,
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false
-      });
-    } catch (error) {
-      Swal.fire({
-        title: '儲存失敗',
-        text: '儲存時發生錯誤',
-        icon: 'error'
-      });
-    }
-  },
-
-  // 載入清單
-  async loadChecklist() {
-    try {
-      const savedLists = JSON.parse(localStorage.getItem(this.SAVED_KEY) || '{}');
-      const listsArray = Object.values(savedLists).sort((a, b) => b.modified - a.modified);
-
-      if (listsArray.length === 0) {
-        Swal.fire({
-          title: '無已儲存清單',
-          text: '目前沒有已儲存的清單',
-          icon: 'info'
-        });
-        return;
-      }
-
-      const listsHtml = listsArray.map(list => `
-        <div class="flex items-center justify-between p-3 border rounded-lg mb-2 hover:bg-gray-50">
-          <span class="flex-1 text-left">${list.name}</span>
-          <div class="flex gap-2">
-            <button class="load-list-btn px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm" data-listname="${list.name}">載入</button>
-            <button class="delete-list-btn px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm" data-listname="${list.name}">刪除</button>
-          </div>
-        </div>
-      `).join('');
-
-      await Swal.fire({
-        title: '管理已儲存清單',
-        html: `<div class="text-left max-h-96 overflow-y-auto">${listsHtml}</div>`,
-        showCancelButton: true,
-        showConfirmButton: false,
-        cancelButtonText: '關閉',
-        didOpen: () => {
-          document.querySelectorAll('.load-list-btn').forEach(btn => {
-            btn.addEventListener('click', async () => {
-              const listName = btn.dataset.listname;
-              Swal.close();
-              await this.performLoadChecklist(listName);
-            });
-          });
-
-          document.querySelectorAll('.delete-list-btn').forEach(btn => {
-            btn.addEventListener('click', async () => {
-              const listName = btn.dataset.listname;
-
-              const confirmDelete = await Swal.fire({
-                title: '確定刪除？',
-                text: `確定要刪除「${listName}」清單嗎？此操作無法復原`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ef4444',
-                cancelButtonColor: '#6b7280',
-                confirmButtonText: '確定刪除',
-                cancelButtonText: '取消'
-              });
-
-              if (confirmDelete.isConfirmed) {
-                await this.deleteChecklist(listName);
-                Swal.close();
-                this.loadChecklist();
-              }
-            });
-          });
-        }
-      });
-    } catch (error) {
-      Swal.fire({
-        title: '載入失敗',
-        text: '載入時發生錯誤',
-        icon: 'error'
-      });
-    }
-  },
-
-  // 執行載入清單
-  async performLoadChecklist(listName) {
-    try {
-      if (!listName) return;
-
-      const savedLists = JSON.parse(localStorage.getItem(this.SAVED_KEY) || '{}');
-      const savedList = savedLists[listName];
-
-      if (!savedList) {
-        Swal.fire({
-          title: '載入失敗',
-          text: '找不到此清單',
-          icon: 'error'
-        });
-        return;
-      }
-
-      const confirmResult = await Swal.fire({
-        title: '確定載入清單？',
-        text: '這將會覆蓋目前的清單內容（所有勾選狀態將被清除）',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3b82f6',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: '確定載入',
-        cancelButtonText: '取消'
-      });
-
-      if (confirmResult.isConfirmed) {
-        const newData = {
-          categories: savedList.checklist.categories.map(cat => ({
-            id: Date.now() + Math.random(),
-            name: cat.name,
-            order: cat.order,
-            items: cat.items.map(item => ({
-              id: Date.now() + Math.random(),
-              name: item.name,
-              order: item.order,
-              checked: false,
-              priority: item.priority || 0
-            }))
-          }))
-        };
-
-        this.saveData(newData);
-        this.renderChecklist();
-        this.updateStats();
-
-        Swal.fire({
-          title: '載入成功',
-          text: '清單已更新',
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false
-        });
-      }
-    } catch (error) {
-      Swal.fire({
-        title: '載入失敗',
-        text: '載入時發生錯誤',
-        icon: 'error'
-      });
-    }
-  },
-
-  // 刪除清單
-  async deleteChecklist(listName) {
-    try {
-      const savedLists = JSON.parse(localStorage.getItem(this.SAVED_KEY) || '{}');
-      delete savedLists[listName];
-      localStorage.setItem(this.SAVED_KEY, JSON.stringify(savedLists));
-
-      this.showToast('清單已刪除', 'success');
-    } catch (error) {
-      Swal.fire({
-        title: '刪除失敗',
-        text: '刪除時發生錯誤',
-        icon: 'error'
-      });
-    }
-  },
-
   // 檢查更新
   async checkForUpdate() {
     try {
@@ -1440,26 +1251,64 @@ const App = {
     input.click();
   },
 
-  // 處理選到的 JSON 檔
+  // 讀取並解析使用者選擇的 JSON 檔，失敗時回傳 null 並提示原因
+  async readChecklistFile(file) {
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      this.validateChecklistJson(parsed);
+      return this.normalizeImportedData(parsed);
+    } catch (error) {
+      const message = error instanceof SyntaxError
+        ? '檔案內容不是有效的 JSON'
+        : error.message;
+      this.showAlert('匯入失敗：' + message, 'error');
+      return null;
+    }
+  },
+
+  // 讓使用者選一個 JSON 檔並回傳解析後的清單（新增用戶流程使用）
+  pickChecklistFile() {
+    return new Promise((resolve) => {
+      const input = document.getElementById('importFileInput');
+      input.value = '';
+
+      const onChange = async () => {
+        cleanup();
+        const file = input.files[0];
+        resolve(file ? await this.readChecklistFile(file) : null);
+      };
+
+      // 使用者按取消時不會觸發 change，用視窗 focus 當作補救
+      const onFocus = () => {
+        setTimeout(() => {
+          if (input.files.length === 0) {
+            cleanup();
+            resolve(null);
+          }
+        }, 500);
+      };
+
+      const cleanup = () => {
+        input.removeEventListener('change', onChange);
+        window.removeEventListener('focus', onFocus);
+      };
+
+      input.addEventListener('change', onChange);
+      window.addEventListener('focus', onFocus, { once: true });
+      input.click();
+    });
+  },
+
+  // 處理選到的 JSON 檔（主畫面選單的「匯入清單檔」）
   async handleImportFile(file) {
     if (!file) return;
 
-    let parsed;
-    try {
-      const text = await file.text();
-      parsed = JSON.parse(text);
-      this.validateChecklistJson(parsed);
-    } catch (error) {
-      this.showAlert('匯入失敗：' + error.message, 'error');
-      return;
-    }
+    const newData = await this.readChecklistFile(file);
+    if (!newData) return;
 
-    const newData = this.normalizeImportedData(parsed);
-    const hasExisting = this.getData().categories.length > 0;
-    const fileBaseName = file.name.replace(/\.json$/i, '');
-
-    // 該用戶沒有清單時直接匯入
-    if (!hasExisting) {
+    // 該用戶沒有清單時直接匯入，不需多問
+    if (this.getData().categories.length === 0) {
       this.saveData(newData);
       await this.renderChecklist();
       this.updateStats();
@@ -1468,56 +1317,22 @@ const App = {
     }
 
     const result = await Swal.fire({
-      title: '已有清單，如何處理？',
-      text: '可以取代目前清單，或另外存成一份備用清單',
-      icon: 'question',
-      showDenyButton: true,
+      title: '確定要取代目前清單？',
+      text: '目前的清單內容與勾選進度將被覆蓋，無法復原',
+      icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: '取代目前清單',
-      denyButtonText: '另存為一份',
+      confirmButtonText: '確定取代',
       cancelButtonText: '取消',
       confirmButtonColor: '#3b82f6',
-      denyButtonColor: '#10b981',
       cancelButtonColor: '#6b7280'
     });
 
-    if (result.isConfirmed) {
-      this.saveData(newData);
-      await this.renderChecklist();
-      this.updateStats();
-      this.showToast('目前清單已被取代', 'success');
-      return;
-    }
+    if (!result.isConfirmed) return;
 
-    if (result.isDenied) {
-      const { value: listName } = await Swal.fire({
-        title: '另存為一份',
-        input: 'text',
-        inputValue: fileBaseName,
-        inputPlaceholder: '請輸入清單名稱',
-        showCancelButton: true,
-        confirmButtonText: '儲存',
-        cancelButtonText: '取消',
-        inputValidator: (value) => {
-          if (!value || !value.trim()) return '請輸入清單名稱';
-        }
-      });
-
-      if (!listName) return;
-
-      try {
-        const savedLists = JSON.parse(localStorage.getItem(this.SAVED_KEY) || '{}');
-        savedLists[listName] = {
-          name: listName,
-          checklist: this.buildExportPayload(newData),
-          modified: Date.now()
-        };
-        localStorage.setItem(this.SAVED_KEY, JSON.stringify(savedLists));
-        this.showToast(`已另存為「${listName}」`, 'success');
-      } catch (error) {
-        this.showAlert('儲存失敗，可能是本機空間不足', 'error');
-      }
-    }
+    this.saveData(newData);
+    await this.renderChecklist();
+    this.updateStats();
+    this.showToast('清單已匯入', 'success');
   },
 
   // 產生匯出用的資料（不含勾選狀態與內部 id）
@@ -1548,7 +1363,7 @@ const App = {
     const userName = currentUser ? currentUser.name : '旅遊';
 
     const { value: listName } = await Swal.fire({
-      title: '匯出清單檔',
+      title: '匯出 JSON 檔案',
       input: 'text',
       inputValue: '旅遊清單',
       inputPlaceholder: '請輸入清單名稱',
