@@ -908,6 +908,11 @@ body {
 }
 
 /* === 用戶選擇畫面 === */
+/* SweetAlert2 彈窗層級為 1060，用戶畫面必須低於它，否則彈窗會被蓋住導致按鈕像是沒反應 */
+#userScreen {
+  z-index: 1000;
+}
+
 .user-select-container {
   max-width: 440px;
 }
