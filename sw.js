@@ -1,5 +1,5 @@
 // Service Worker
-const CACHE_VERSION = 'v7';
+const CACHE_VERSION = 'v8';
 const CACHE_NAME = `travel-checklist-${CACHE_VERSION}`;
 
 // 以 Service Worker 所在位置為基準，避免 GitHub Pages 子目錄部署時路徑錯誤
@@ -11,9 +11,8 @@ const LOCAL_CACHE = [
   BASE + 'index.html',
   BASE + 'manifest.json',
   BASE + 'assets/css/app.css',
-  BASE + 'assets/js/auth.js',
+  BASE + 'assets/js/users.js',
   BASE + 'assets/js/storage.js',
-  BASE + 'assets/js/user.js',
   BASE + 'assets/js/checklist.js',
   BASE + 'assets/js/app.js',
   BASE + 'data/default-checklist.json'

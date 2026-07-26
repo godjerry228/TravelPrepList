@@ -897,3 +897,103 @@ body {
   background: linear-gradient(135deg, #06b6d4, #0891b2);
 }
 
+/* === 選單靛藍圖示 === */
+.menu-item-icon.indigo {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+}
+
+/* === 選單藍綠圖示 === */
+.menu-item-icon.teal {
+  background: linear-gradient(135deg, #14b8a6, #0d9488);
+}
+
+/* === 用戶選擇畫面 === */
+.user-select-container {
+  max-width: 440px;
+}
+
+.user-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 45vh;
+  overflow-y: auto;
+  margin-bottom: 0.5rem;
+}
+
+.user-list-empty {
+  color: #9ca3af;
+  font-size: 0.95rem;
+  padding: 1.5rem 0;
+}
+
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #f9fafb;
+  border: 2px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 0.5rem 0.75rem 0.5rem 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.user-card:hover {
+  border-color: #6366f1;
+  background: #eef2ff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(99, 102, 241, 0.18);
+}
+
+.user-card-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.user-avatar {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  font-size: 1.35rem;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+}
+
+.user-card-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+  word-break: break-all;
+}
+
+.user-delete-btn {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.user-delete-btn:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+

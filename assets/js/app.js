@@ -1,73 +1,161 @@
-// 主應用程式 - 單用戶模式
+// 主應用程式 - 多用戶模式
 const App = {
-  STORAGE_KEY: 'travelChecklistData',
   sortableInstances: [],
+  eventsBound: false,
+
+  // 目前用戶的清單儲存鍵
+  get STORAGE_KEY() {
+    const userId = Users.getCurrentId();
+    return userId ? Users.dataKey(userId) : 'tc_data_none';
+  },
+
+  // 目前用戶的已存清單儲存鍵
+  get SAVED_KEY() {
+    const userId = Users.getCurrentId();
+    return userId ? Users.savedKey(userId) : 'tc_saved_none';
+  },
 
   // 啟動應用程式（入口點）
   start() {
-    this.bindAuthEvents();
+    Users.migrateLegacyData();
+    this.bindUserScreenEvents();
 
-    if (Auth.isLoggedIn()) {
-      this.showApp();
-      this.init();
+    const current = Users.getCurrent();
+    if (current) {
+      this.enterApp();
     } else {
-      this.showLogin();
+      this.showUserScreen();
     }
   },
 
-  // 顯示登入畫面
-  showLogin() {
-    document.getElementById('loginScreen').classList.remove('hidden');
+  // 顯示用戶選擇畫面
+  showUserScreen() {
+    document.getElementById('userScreen').classList.remove('hidden');
     document.getElementById('appContainer').classList.add('hidden');
     document.getElementById('appFooter').classList.add('hidden');
+    this.renderUserList();
   },
 
   // 顯示主應用程式
   showApp() {
-    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('userScreen').classList.add('hidden');
     document.getElementById('appContainer').classList.remove('hidden');
     document.getElementById('appFooter').classList.remove('hidden');
   },
 
-  // 綁定登入相關事件
-  bindAuthEvents() {
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const password = document.getElementById('loginPassword').value;
+  // 進入主畫面並初始化
+  async enterApp() {
+    this.showApp();
+    const current = Users.getCurrent();
+    document.getElementById('currentUserName').textContent = current ? current.name : '';
 
-      // 先驗證密碼；密碼錯誤一定要能提示，不受後續初始化影響
-      try {
-        await Auth.login(password);
-      } catch (error) {
-        this.showToast(error.message, 'error');
+    try {
+      await this.init();
+    } catch (error) {
+      this.showToast('初始化發生問題：' + error.message, 'error');
+    }
+  },
+
+  // 渲染用戶卡片清單
+  renderUserList() {
+    const container = document.getElementById('userList');
+    const users = Users.getAll();
+
+    if (users.length === 0) {
+      container.innerHTML = '<p class="user-list-empty">尚無用戶，請先新增一位</p>';
+      return;
+    }
+
+    container.innerHTML = users.map(u => `
+      <div class="user-card" data-userid="${u.id}">
+        <button type="button" class="user-card-main" data-userid="${u.id}">
+          <span class="user-avatar">${this.escapeHtml(u.name.charAt(0))}</span>
+          <span class="user-card-name">${this.escapeHtml(u.name)}</span>
+        </button>
+        <button type="button" class="user-delete-btn" data-userid="${u.id}" aria-label="刪除用戶">✕</button>
+      </div>
+    `).join('');
+  },
+
+  // 綁定用戶選擇畫面事件
+  bindUserScreenEvents() {
+    document.getElementById('addUserBtn').addEventListener('click', () => {
+      this.showAddUserModal();
+    });
+
+    document.getElementById('userList').addEventListener('click', async (e) => {
+      const deleteBtn = e.target.closest('.user-delete-btn');
+      if (deleteBtn) {
+        await this.confirmDeleteUser(deleteBtn.dataset.userid);
         return;
       }
 
-      // 密碼正確：進入主畫面。初始化即使出錯也不擋登入
-      this.showApp();
-      this.showToast('登入成功！', 'success');
-      try {
-        this.init();
-      } catch (error) {
-        this.showToast('初始化發生問題：' + error.message, 'error');
+      const mainBtn = e.target.closest('.user-card-main');
+      if (mainBtn) {
+        Users.setCurrent(mainBtn.dataset.userid);
+        await this.enterApp();
       }
     });
   },
 
-  // 登出
-  handleLogout() {
-    Auth.logout();
-    this.showLogin();
-    document.getElementById('loginPassword').value = '';
-    this.showToast('已登出', 'info');
+  // 新增用戶彈窗
+  async showAddUserModal() {
+    const { value: name } = await Swal.fire({
+      title: '新增用戶',
+      input: 'text',
+      inputPlaceholder: '請輸入用戶名稱',
+      showCancelButton: true,
+      confirmButtonText: '建立',
+      cancelButtonText: '取消',
+      inputValidator: (value) => {
+        if (!value || !value.trim()) return '請輸入用戶名稱';
+        if (Users.getAll().some(u => u.name === value.trim())) return '已有相同名稱的用戶';
+      }
+    });
+
+    if (!name) return;
+
+    try {
+      const user = Users.create(name);
+      this.renderUserList();
+      this.showToast(`已建立用戶「${user.name}」`, 'success');
+    } catch (error) {
+      this.showAlert(error.message, 'error');
+    }
   },
 
-  // 初始化應用程式（登入後）
+  // 刪除用戶確認
+  async confirmDeleteUser(userId) {
+    const user = Users.getAll().find(u => u.id === userId);
+    if (!user) return;
+
+    const result = await Swal.fire({
+      title: `確定刪除「${user.name}」？`,
+      text: '該用戶的清單與勾選進度將一併刪除，無法復原',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: '確定刪除',
+      cancelButtonText: '取消'
+    });
+
+    if (!result.isConfirmed) return;
+
+    Users.remove(userId);
+    this.renderUserList();
+    this.showToast('用戶已刪除', 'success');
+  },
+
+  // 切換用戶（返回選擇畫面）
+  handleSwitchUser() {
+    Users.clearCurrent();
+    this.showUserScreen();
+  },
+
+  // 初始化應用程式（選定用戶後）
   async init() {
     try {
-      // 預載入已儲存的清單到 localStorage
-      await this.preloadSavedLists();
-
       // 載入用戶清單資料
       await this.loadUserData();
 
@@ -75,49 +163,14 @@ const App = {
       await this.renderChecklist();
       await this.updateStats();
 
-      // 綁定事件
-      this.bindEvents();
+      // 綁定事件（只綁一次，避免切換用戶時重複綁定）
+      if (!this.eventsBound) {
+        this.bindEvents();
+        this.eventsBound = true;
+      }
     } catch (error) {
       console.error('初始化失敗:', error);
       this.showToast('初始化失敗: ' + error.message, 'error');
-    }
-  },
-
-  // 預載入已儲存的清單
-  async preloadSavedLists() {
-    try {
-      // 檢查是否已經預載入過
-      const preloadFlag = localStorage.getItem('savedListsPreloaded');
-      if (preloadFlag === 'true') {
-        return; // 已經預載入過，不需要重複載入
-      }
-
-      // 嘗試載入 Jerry 的清單
-      const response = await fetch('saved-lists/Jerry 2026日本冬天之旅清單.json');
-      if (response.ok) {
-        const jerryList = await response.json();
-
-        // 取得現有的已儲存清單
-        const savedLists = JSON.parse(localStorage.getItem('savedChecklists') || '{}');
-
-        // 將 Jerry 的清單加入
-        savedLists['Jerry 2026日本冬天之旅清單'] = {
-          name: 'Jerry 2026日本冬天之旅清單',
-          checklist: jerryList,
-          modified: Date.now()
-        };
-
-        // 儲存回 localStorage
-        localStorage.setItem('savedChecklists', JSON.stringify(savedLists));
-
-        // 設定預載入標記
-        localStorage.setItem('savedListsPreloaded', 'true');
-
-        console.log('已預載入 Jerry 2026日本冬天之旅清單');
-      }
-    } catch (error) {
-      console.error('預載入清單失敗:', error);
-      // 不中斷應用程式初始化
     }
   },
 
@@ -126,7 +179,7 @@ const App = {
     const savedData = localStorage.getItem(this.STORAGE_KEY);
 
     if (!savedData) {
-      // 初次使用，載入預設清單
+      // 該用戶初次使用，載入預設清單
       await this.loadDefaultChecklist();
     }
   },
@@ -352,9 +405,23 @@ const App = {
       this.checkForUpdate();
     });
 
-    document.getElementById('logoutBtn').addEventListener('click', () => {
+    document.getElementById('importJsonBtn').addEventListener('click', () => {
       this.toggleMenu(false);
-      this.handleLogout();
+      this.triggerImportJson();
+    });
+
+    document.getElementById('exportJsonBtn').addEventListener('click', () => {
+      this.toggleMenu(false);
+      this.exportJson();
+    });
+
+    document.getElementById('importFileInput').addEventListener('change', (e) => {
+      this.handleImportFile(e.target.files[0]);
+    });
+
+    document.getElementById('switchUserBtn').addEventListener('click', () => {
+      this.toggleMenu(false);
+      this.handleSwitchUser();
     });
 
     const grid = document.getElementById('checklistGrid');
@@ -1110,13 +1177,13 @@ const App = {
     };
 
     try {
-      const savedLists = JSON.parse(localStorage.getItem('savedChecklists') || '{}');
+      const savedLists = JSON.parse(localStorage.getItem(this.SAVED_KEY) || '{}');
       savedLists[listName] = {
         name: listName,
         checklist: exportData,
         modified: Date.now()
       };
-      localStorage.setItem('savedChecklists', JSON.stringify(savedLists));
+      localStorage.setItem(this.SAVED_KEY, JSON.stringify(savedLists));
 
       Swal.fire({
         title: '儲存成功',
@@ -1137,7 +1204,7 @@ const App = {
   // 載入清單
   async loadChecklist() {
     try {
-      const savedLists = JSON.parse(localStorage.getItem('savedChecklists') || '{}');
+      const savedLists = JSON.parse(localStorage.getItem(this.SAVED_KEY) || '{}');
       const listsArray = Object.values(savedLists).sort((a, b) => b.modified - a.modified);
 
       if (listsArray.length === 0) {
@@ -1212,7 +1279,7 @@ const App = {
     try {
       if (!listName) return;
 
-      const savedLists = JSON.parse(localStorage.getItem('savedChecklists') || '{}');
+      const savedLists = JSON.parse(localStorage.getItem(this.SAVED_KEY) || '{}');
       const savedList = savedLists[listName];
 
       if (!savedList) {
@@ -1275,9 +1342,9 @@ const App = {
   // 刪除清單
   async deleteChecklist(listName) {
     try {
-      const savedLists = JSON.parse(localStorage.getItem('savedChecklists') || '{}');
+      const savedLists = JSON.parse(localStorage.getItem(this.SAVED_KEY) || '{}');
       delete savedLists[listName];
-      localStorage.setItem('savedChecklists', JSON.stringify(savedLists));
+      localStorage.setItem(this.SAVED_KEY, JSON.stringify(savedLists));
 
       this.showToast('清單已刪除', 'success');
     } catch (error) {
@@ -1319,7 +1386,218 @@ const App = {
     }
   },
 
-  // 顯示 Toast 通知
+  // HTML 逸出，避免用戶名稱含特殊字元破壞版面
+  escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[c]);
+  },
+
+  // 驗證匯入的 JSON 結構
+  validateChecklistJson(data) {
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+      throw new Error('檔案格式不正確，缺少清單內容');
+    }
+    if (!Array.isArray(data.categories)) {
+      throw new Error('檔案格式不正確，找不到分類資料');
+    }
+    data.categories.forEach((cat, i) => {
+      if (!cat || typeof cat.name !== 'string' || !Array.isArray(cat.items)) {
+        throw new Error(`第 ${i + 1} 個分類格式不正確`);
+      }
+      cat.items.forEach((item, j) => {
+        if (!item || typeof item.name !== 'string') {
+          throw new Error(`分類「${cat.name}」的第 ${j + 1} 個項目格式不正確`);
+        }
+      });
+    });
+    return true;
+  },
+
+  // 將匯入的資料轉為內部格式（補齊 id / order / checked / priority）
+  normalizeImportedData(data) {
+    let seed = Date.now();
+    return {
+      categories: data.categories.map((cat, ci) => ({
+        id: ++seed + Math.random(),
+        name: cat.name,
+        order: typeof cat.order === 'number' ? cat.order : ci,
+        items: cat.items.map((item, ii) => ({
+          id: ++seed + Math.random(),
+          name: item.name,
+          order: typeof item.order === 'number' ? item.order : ii,
+          checked: item.checked === true,
+          priority: typeof item.priority === 'number' ? item.priority : 0
+        }))
+      }))
+    };
+  },
+
+  // 觸發選擇本機 JSON 檔
+  triggerImportJson() {
+    const input = document.getElementById('importFileInput');
+    input.value = '';
+    input.click();
+  },
+
+  // 處理選到的 JSON 檔
+  async handleImportFile(file) {
+    if (!file) return;
+
+    let parsed;
+    try {
+      const text = await file.text();
+      parsed = JSON.parse(text);
+      this.validateChecklistJson(parsed);
+    } catch (error) {
+      this.showAlert('匯入失敗：' + error.message, 'error');
+      return;
+    }
+
+    const newData = this.normalizeImportedData(parsed);
+    const hasExisting = this.getData().categories.length > 0;
+    const fileBaseName = file.name.replace(/\.json$/i, '');
+
+    // 該用戶沒有清單時直接匯入
+    if (!hasExisting) {
+      this.saveData(newData);
+      await this.renderChecklist();
+      this.updateStats();
+      this.showToast('清單已匯入', 'success');
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: '已有清單，如何處理？',
+      text: '可以取代目前清單，或另外存成一份備用清單',
+      icon: 'question',
+      showDenyButton: true,
+      showCancelButton: true,
+      confirmButtonText: '取代目前清單',
+      denyButtonText: '另存為一份',
+      cancelButtonText: '取消',
+      confirmButtonColor: '#3b82f6',
+      denyButtonColor: '#10b981',
+      cancelButtonColor: '#6b7280'
+    });
+
+    if (result.isConfirmed) {
+      this.saveData(newData);
+      await this.renderChecklist();
+      this.updateStats();
+      this.showToast('目前清單已被取代', 'success');
+      return;
+    }
+
+    if (result.isDenied) {
+      const { value: listName } = await Swal.fire({
+        title: '另存為一份',
+        input: 'text',
+        inputValue: fileBaseName,
+        inputPlaceholder: '請輸入清單名稱',
+        showCancelButton: true,
+        confirmButtonText: '儲存',
+        cancelButtonText: '取消',
+        inputValidator: (value) => {
+          if (!value || !value.trim()) return '請輸入清單名稱';
+        }
+      });
+
+      if (!listName) return;
+
+      try {
+        const savedLists = JSON.parse(localStorage.getItem(this.SAVED_KEY) || '{}');
+        savedLists[listName] = {
+          name: listName,
+          checklist: this.buildExportPayload(newData),
+          modified: Date.now()
+        };
+        localStorage.setItem(this.SAVED_KEY, JSON.stringify(savedLists));
+        this.showToast(`已另存為「${listName}」`, 'success');
+      } catch (error) {
+        this.showAlert('儲存失敗，可能是本機空間不足', 'error');
+      }
+    }
+  },
+
+  // 產生匯出用的資料（不含勾選狀態與內部 id）
+  buildExportPayload(data) {
+    return {
+      categories: data.categories.map(cat => ({
+        name: cat.name,
+        order: cat.order,
+        items: cat.items.map(item => ({
+          name: item.name,
+          order: item.order,
+          priority: item.priority || 0
+        }))
+      }))
+    };
+  },
+
+  // 匯出目前清單為 JSON 檔並下載
+  async exportJson() {
+    const data = this.getData();
+
+    if (data.categories.length === 0) {
+      this.showAlert('目前沒有清單可以匯出', 'info');
+      return;
+    }
+
+    const currentUser = Users.getCurrent();
+    const userName = currentUser ? currentUser.name : '旅遊';
+
+    const { value: listName } = await Swal.fire({
+      title: '匯出清單檔',
+      input: 'text',
+      inputValue: '旅遊清單',
+      inputPlaceholder: '請輸入清單名稱',
+      showCancelButton: true,
+      confirmButtonText: '下載',
+      cancelButtonText: '取消',
+      inputValidator: (value) => {
+        if (!value || !value.trim()) return '請輸入清單名稱';
+        if (/[\/\\:\*\?"<>\|]/.test(value)) return '名稱不可包含特殊字元';
+      }
+    });
+
+    if (!listName) return;
+
+    try {
+      const payload = this.buildExportPayload(data);
+      const blob = new Blob([JSON.stringify(payload, null, 4)], {
+        type: 'application/json;charset=utf-8'
+      });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${userName} ${listName.trim()}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      this.showToast('清單已下載', 'success');
+    } catch (error) {
+      this.showAlert('匯出失敗：' + error.message, 'error');
+    }
+  },
+
+  // 置中彈窗提示（需按「確定」關閉），用於一定要讓使用者看到的訊息
+  showAlert(message, type = 'info') {
+    if (typeof Swal === 'undefined') {
+      alert(message);
+      return;
+    }
+
+    Swal.fire({
+      icon: type,
+      title: message,
+      confirmButtonText: '確定'
+    });
+  },
+
   showToast(message, type = 'info') {
     // SweetAlert2 由 CDN 載入，若手機網路擋掉 CDN 則 Swal 不存在，
     // 此時退回原生提示，避免整個流程因為找不到 Swal 而中斷（登入無反應）

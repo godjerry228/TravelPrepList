@@ -31,20 +31,18 @@
 </head>
 <body class="bg-gradient-main min-h-screen">
 
-  <!-- 登入畫面 -->
-  <div id="loginScreen" class="login-screen">
-    <div class="login-container">
-      <div class="login-icon">🔐</div>
+  <!-- 用戶選擇畫面 -->
+  <div id="userScreen" class="login-screen">
+    <div class="login-container user-select-container">
+      <div class="login-icon">🧳</div>
       <h1 class="login-title">旅遊準備清單</h1>
-      <p class="login-subtitle">請輸入密碼以使用清單</p>
+      <p class="login-subtitle">請選擇使用者</p>
 
-      <form id="loginForm" class="login-form">
-        <div class="login-input-group">
-          <label for="loginPassword">密碼</label>
-          <input type="password" id="loginPassword" placeholder="請輸入密碼" autocomplete="current-password" required>
-        </div>
-        <button type="submit" id="loginBtn" class="login-submit-btn">登入</button>
-      </form>
+      <div id="userList" class="user-list">
+        <!-- 用戶卡片由 JavaScript 動態生成 -->
+      </div>
+
+      <button type="button" id="addUserBtn" class="login-submit-btn">＋ 新增用戶</button>
     </div>
   </div>
 
@@ -62,7 +60,7 @@
   <header class="header-container pt-6 pb-4">
     <div class="header-icon">🧳</div>
     <h1 class="header-title">旅遊準備清單</h1>
-    <p class="header-subtitle">輕鬆打包，快樂出發</p>
+    <p class="header-subtitle"><span id="currentUserName"></span>的行李清單</p>
   </header>
 
   <!-- 主內容區 -->
@@ -160,6 +158,34 @@
           </div>
         </button>
 
+        <div class="menu-divider"></div>
+
+        <button id="importJsonBtn" class="menu-item">
+          <div class="menu-item-icon indigo">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h5l2 2h5a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
+            </svg>
+          </div>
+          <div class="menu-item-text">
+            <div class="menu-item-title">匯入清單檔</div>
+            <div class="menu-item-desc">從電腦選擇 JSON 清單檔</div>
+          </div>
+        </button>
+
+        <button id="exportJsonBtn" class="menu-item">
+          <div class="menu-item-icon teal">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 16V4m0 12l-3-3m3 3l3-3M3 17v2a2 2 0 002 2h14a2 2 0 002-2v-2"></path>
+            </svg>
+          </div>
+          <div class="menu-item-text">
+            <div class="menu-item-title">匯出清單檔</div>
+            <div class="menu-item-desc">下載 JSON 保存到電腦</div>
+          </div>
+        </button>
+
+        <div class="menu-divider"></div>
+
         <button id="resetAllBtn" class="menu-item">
           <div class="menu-item-icon orange">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -186,15 +212,15 @@
 
         <div class="menu-divider"></div>
 
-        <button id="logoutBtn" class="menu-item logout">
+        <button id="switchUserBtn" class="menu-item logout">
           <div class="menu-item-icon red">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
             </svg>
           </div>
           <div class="menu-item-text">
-            <div class="menu-item-title">登出</div>
-            <div class="menu-item-desc">返回登入畫面</div>
+            <div class="menu-item-title">切換用戶</div>
+            <div class="menu-item-desc">返回用戶選擇畫面</div>
           </div>
         </button>
       </div>
@@ -208,11 +234,10 @@
   </div>
 
   <!-- JavaScript 模組 -->
-  <script src="assets/js/auth.js?v=3"></script>
+  <script src="assets/js/users.js?v=19"></script>
   <script src="assets/js/storage.js?v=9"></script>
-  <script src="assets/js/user.js?v=9"></script>
   <script src="assets/js/checklist.js?v=9"></script>
-  <script src="assets/js/app.js?v=17"></script>
+  <script src="assets/js/app.js?v=19"></script>
 
   <!-- PWA 註冊 -->
   <script>
