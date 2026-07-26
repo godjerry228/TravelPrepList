@@ -35,13 +35,21 @@ const App = {
       e.preventDefault();
       const password = document.getElementById('loginPassword').value;
 
+      // 先驗證密碼；密碼錯誤一定要能提示，不受後續初始化影響
       try {
         await Auth.login(password);
-        this.showApp();
-        this.init();
-        this.showToast('登入成功！', 'success');
       } catch (error) {
         this.showToast(error.message, 'error');
+        return;
+      }
+
+      // 密碼正確：進入主畫面。初始化即使出錯也不擋登入
+      this.showApp();
+      this.showToast('登入成功！', 'success');
+      try {
+        this.init();
+      } catch (error) {
+        this.showToast('初始化發生問題：' + error.message, 'error');
       }
     });
   },
@@ -1313,6 +1321,13 @@ const App = {
 
   // 顯示 Toast 通知
   showToast(message, type = 'info') {
+    // SweetAlert2 由 CDN 載入，若手機網路擋掉 CDN 則 Swal 不存在，
+    // 此時退回原生提示，避免整個流程因為找不到 Swal 而中斷（登入無反應）
+    if (typeof Swal === 'undefined') {
+      alert(message);
+      return;
+    }
+
     const Toast = Swal.mixin({
       toast: true,
       position: 'top-end',
