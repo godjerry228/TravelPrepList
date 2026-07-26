@@ -20,7 +20,7 @@
   <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
 
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="assets/css/app.css?v=18">
+  <link rel="stylesheet" href="assets/css/app.css?v=19">
 
   <!-- SortableJS CDN -->
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
@@ -210,18 +210,41 @@
   </div>
 
   <!-- JavaScript 模組 -->
-  <script src="assets/js/users.js?v=21"></script>
+  <script src="assets/js/users.js?v=22"></script>
   <script src="assets/js/storage.js?v=9"></script>
   <script src="assets/js/checklist.js?v=9"></script>
-  <script src="assets/js/app.js?v=21"></script>
+  <script src="assets/js/app.js?v=22"></script>
 
-  <!-- PWA 註冊 -->
+  <!-- PWA 註冊：偵測到新版時自動接手並重新載入，使用者不需手動清快取 -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .then(reg => console.log('Service Worker 註冊成功:', reg))
+        navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
+          .then((reg) => {
+            // 每次開啟都主動問伺服器有沒有新版
+            reg.update();
+
+            // 有新版安裝完成時，自動重新載入一次帶入新程式
+            reg.addEventListener('updatefound', () => {
+              const newWorker = reg.installing;
+              if (!newWorker) return;
+
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  newWorker.postMessage({ type: 'SKIP_WAITING' });
+                }
+              });
+            });
+          })
           .catch(err => console.error('Service Worker 註冊失敗:', err));
+
+        // 新版接手後重新載入頁面（只做一次，避免無限重整）
+        let reloading = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (reloading) return;
+          reloading = true;
+          location.reload();
+        });
       });
     }
   </script>

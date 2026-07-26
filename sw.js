@@ -1,14 +1,14 @@
 // Service Worker
-const CACHE_VERSION = 'v11';
+const CACHE_VERSION = 'v12';
 const CACHE_NAME = `travel-checklist-${CACHE_VERSION}`;
 
 // 以 Service Worker 所在位置為基準，避免 GitHub Pages 子目錄部署時路徑錯誤
 const BASE = new URL('./', self.location).pathname;
 
 // 本站資源（必須全部成功，否則離線功能不完整）
+// 注意：index.html 與根路徑不預先快取，改由導覽請求走 Network First 動態快取，
+// 避免安裝當下就把舊版首頁存起來，導致改版後仍載入舊程式
 const LOCAL_CACHE = [
-  BASE,
-  BASE + 'index.html',
   BASE + 'manifest.json',
   BASE + 'assets/css/app.css',
   BASE + 'assets/js/users.js',
@@ -74,21 +74,23 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 導覽請求（開啟頁面）走 Network First，
-  // 確保 index.html 內的 ?v= 版本號更新後手機能立即取得新版程式
+  // 導覽請求（開啟頁面）走 Network First，且強制略過瀏覽器 HTTP 快取，
+  // 確保 index.html 內的 ?v= 版本號更新後，手機一開啟就取得新版程式
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request)
+      fetch(event.request, { cache: 'no-store' })
         .then((response) => {
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(BASE + 'index.html', responseToCache);
+            });
+          }
           return response;
         })
         .catch(() => {
-          return caches.match(event.request)
-            .then((cached) => cached || caches.match(BASE + 'index.html'));
+          // 離線時才退回快取的首頁
+          return caches.match(BASE + 'index.html');
         })
     );
     return;
@@ -120,11 +122,9 @@ self.addEventListener('fetch', (event) => {
               });
 
             return response;
-          })
-          .catch(() => {
-            // 網路失敗時，返回離線頁面（如果有的話）
-            return caches.match(BASE + 'index.html');
           });
+        // 靜態資源取不到就讓它失敗，不可回傳首頁 HTML，
+        // 否則 JS/CSS 會拿到一份 HTML 而整個程式壞掉
       })
   );
 });
