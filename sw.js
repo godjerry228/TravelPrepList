@@ -1,12 +1,12 @@
 // Service Worker
-const CACHE_VERSION = 'v5';
+const CACHE_VERSION = 'v6';
 const CACHE_NAME = `travel-checklist-${CACHE_VERSION}`;
 
 // 以 Service Worker 所在位置為基準，避免 GitHub Pages 子目錄部署時路徑錯誤
 const BASE = new URL('./', self.location).pathname;
 
-// 需要快取的靜態資源
-const STATIC_CACHE = [
+// 本站資源（必須全部成功，否則離線功能不完整）
+const LOCAL_CACHE = [
   BASE,
   BASE + 'index.html',
   BASE + 'manifest.json',
@@ -16,20 +16,34 @@ const STATIC_CACHE = [
   BASE + 'assets/js/user.js',
   BASE + 'assets/js/checklist.js',
   BASE + 'assets/js/app.js',
-  BASE + 'data/default-checklist.json',
+  BASE + 'data/default-checklist.json'
+];
+
+// 外部 CDN 資源（可能因跨網域限制無法快取，允許個別失敗，不可中斷安裝）
+const CDN_CACHE = [
   'https://cdn.tailwindcss.com',
   'https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js'
 ];
 
-// 安裝事件 - 預快取所有靜態資源
+// 安裝事件 - 預快取靜態資源
 self.addEventListener('install', (event) => {
   console.log('[SW] 安裝中...');
 
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('[SW] 快取靜態資源');
-        return cache.addAll(STATIC_CACHE);
+      .then(async (cache) => {
+        // 本站資源：全部一起快取，任一失敗代表部署有問題
+        await cache.addAll(LOCAL_CACHE);
+
+        // CDN 資源：逐一嘗試，用 no-cors 避免跨網域錯誤，失敗就跳過
+        await Promise.all(CDN_CACHE.map(async (url) => {
+          try {
+            const resp = await fetch(url, { mode: 'no-cors' });
+            await cache.put(url, resp);
+          } catch (e) {
+            console.warn('[SW] CDN 快取略過:', url);
+          }
+        }));
       })
       .then(() => self.skipWaiting())
   );
