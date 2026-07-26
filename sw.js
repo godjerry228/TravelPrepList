@@ -1,18 +1,22 @@
 // Service Worker
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v5';
 const CACHE_NAME = `travel-checklist-${CACHE_VERSION}`;
+
+// 以 Service Worker 所在位置為基準，避免 GitHub Pages 子目錄部署時路徑錯誤
+const BASE = new URL('./', self.location).pathname;
 
 // 需要快取的靜態資源
 const STATIC_CACHE = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/assets/css/app.css',
-  '/assets/js/storage.js',
-  '/assets/js/user.js',
-  '/assets/js/checklist.js',
-  '/assets/js/app.js',
-  '/data/default-checklist.json',
+  BASE,
+  BASE + 'index.html',
+  BASE + 'manifest.json',
+  BASE + 'assets/css/app.css',
+  BASE + 'assets/js/auth.js',
+  BASE + 'assets/js/storage.js',
+  BASE + 'assets/js/user.js',
+  BASE + 'assets/js/checklist.js',
+  BASE + 'assets/js/app.js',
+  BASE + 'data/default-checklist.json',
   'https://cdn.tailwindcss.com',
   'https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js'
 ];
@@ -51,8 +55,33 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// 攔截請求 - Cache First 策略
+// 攔截請求
 self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
+  // 導覽請求（開啟頁面）走 Network First，
+  // 確保 index.html 內的 ?v= 版本號更新後手機能立即取得新版程式
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+          return response;
+        })
+        .catch(() => {
+          return caches.match(event.request)
+            .then((cached) => cached || caches.match(BASE + 'index.html'));
+        })
+    );
+    return;
+  }
+
+  // 其他靜態資源走 Cache First（網址帶版本號，改版時自然換新網址）
   event.respondWith(
     caches.match(event.request)
       .then((cachedResponse) => {
@@ -81,7 +110,7 @@ self.addEventListener('fetch', (event) => {
           })
           .catch(() => {
             // 網路失敗時，返回離線頁面（如果有的話）
-            return caches.match('/index.html');
+            return caches.match(BASE + 'index.html');
           });
       })
   );
