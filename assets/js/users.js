@@ -59,6 +59,7 @@ const Users = {
 
     localStorage.removeItem(this.dataKey(userId));
     localStorage.removeItem(this.savedKey(userId));
+    localStorage.removeItem(this.titleKey(userId));
 
     if (this.getCurrentId() === userId) {
       localStorage.removeItem(this.CURRENT_KEY);
@@ -112,6 +113,24 @@ const Users = {
 
   savedKey(userId) {
     return 'tc_saved_' + userId;
+  },
+
+  // 該用戶目前清單的名稱（顯示在小標、匯出檔名使用）
+  titleKey(userId) {
+    return 'tc_title_' + userId;
+  },
+
+  getChecklistTitle(userId) {
+    return localStorage.getItem(this.titleKey(userId)) || '';
+  },
+
+  setChecklistTitle(userId, title) {
+    const trimmed = (title || '').trim();
+    if (trimmed) {
+      localStorage.setItem(this.titleKey(userId), trimmed);
+    } else {
+      localStorage.removeItem(this.titleKey(userId));
+    }
   },
 
   // 一次性資料遷移：把舊的單用戶資料轉給預設用戶

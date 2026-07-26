@@ -40,14 +40,53 @@ const App = {
   // 進入主畫面並初始化
   async enterApp() {
     this.showApp();
-    const current = Users.getCurrent();
-    document.getElementById('currentUserName').textContent = current ? current.name : '';
+    this.renderHeaderSubtitle();
 
     try {
       await this.init();
     } catch (error) {
       this.showToast('初始化發生問題：' + error.message, 'error');
     }
+  },
+
+  // 目前清單名稱（未命名時回傳預設字樣）
+  getChecklistTitle() {
+    const userId = Users.getCurrentId();
+    if (!userId) return '';
+    return Users.getChecklistTitle(userId) || '行李清單';
+  },
+
+  // 渲染小標：用戶名 ・ 清單名
+  renderHeaderSubtitle() {
+    const current = Users.getCurrent();
+    document.getElementById('currentUserName').textContent = current ? current.name : '';
+    document.getElementById('checklistTitle').textContent = this.getChecklistTitle();
+  },
+
+  // 點擊小標修改清單名稱
+  async editChecklistTitle() {
+    const userId = Users.getCurrentId();
+    if (!userId) return;
+
+    const { value: title } = await Swal.fire({
+      title: '修改清單名稱',
+      input: 'text',
+      inputValue: this.getChecklistTitle(),
+      inputPlaceholder: '例：2026日本冬天之旅清單',
+      showCancelButton: true,
+      confirmButtonText: '儲存',
+      cancelButtonText: '取消',
+      inputValidator: (value) => {
+        if (!value || !value.trim()) return '請輸入清單名稱';
+        if (/[\/\\:\*\?"<>\|]/.test(value)) return '名稱不可包含 \\ / : * ? " < > | 等字元';
+      }
+    });
+
+    if (!title) return;
+
+    Users.setChecklistTitle(userId, title);
+    this.renderHeaderSubtitle();
+    this.showToast('清單名稱已更新', 'success');
   },
 
   // 渲染用戶卡片清單
@@ -126,10 +165,10 @@ const App = {
     if (!source.isConfirmed && !source.isDenied) return;
 
     // 選擇匯入時，先確認檔案讀取成功才建立用戶，避免留下半成品
-    let importedData = null;
+    let imported = null;
     if (source.isDenied) {
-      importedData = await this.pickChecklistFile();
-      if (!importedData) return;
+      imported = await this.pickChecklistFile();
+      if (!imported) return;
     }
 
     let user;
@@ -141,8 +180,9 @@ const App = {
     }
 
     try {
-      if (importedData) {
-        localStorage.setItem(Users.dataKey(user.id), JSON.stringify(importedData));
+      if (imported) {
+        localStorage.setItem(Users.dataKey(user.id), JSON.stringify(imported.data));
+        Users.setChecklistTitle(user.id, imported.title);
       }
       // 使用預設清單時不寫入資料，進入清單後會自動載入預設內容
 
@@ -444,6 +484,10 @@ const App = {
     document.getElementById('switchUserBtn').addEventListener('click', () => {
       this.toggleMenu(false);
       this.handleSwitchUser();
+    });
+
+    document.getElementById('checklistTitleBtn').addEventListener('click', () => {
+      this.editChecklistTitle();
     });
 
     const grid = document.getElementById('checklistGrid');
@@ -1252,12 +1296,16 @@ const App = {
   },
 
   // 讀取並解析使用者選擇的 JSON 檔，失敗時回傳 null 並提示原因
+  // 回傳 { data, title }，title 取自檔名（去除副檔名）
   async readChecklistFile(file) {
     try {
       const text = await file.text();
       const parsed = JSON.parse(text);
       this.validateChecklistJson(parsed);
-      return this.normalizeImportedData(parsed);
+      return {
+        data: this.normalizeImportedData(parsed),
+        title: file.name.replace(/\.json$/i, '').trim()
+      };
     } catch (error) {
       const message = error instanceof SyntaxError
         ? '檔案內容不是有效的 JSON'
@@ -1300,36 +1348,33 @@ const App = {
     });
   },
 
-  // 處理選到的 JSON 檔（主畫面選單的「匯入清單檔」）
+  // 處理選到的 JSON 檔（主畫面選單的「匯入 JSON 檔案」）
   async handleImportFile(file) {
     if (!file) return;
 
-    const newData = await this.readChecklistFile(file);
-    if (!newData) return;
+    const imported = await this.readChecklistFile(file);
+    if (!imported) return;
 
-    // 該用戶沒有清單時直接匯入，不需多問
-    if (this.getData().categories.length === 0) {
-      this.saveData(newData);
-      await this.renderChecklist();
-      this.updateStats();
-      this.showToast('清單已匯入', 'success');
-      return;
+    // 該用戶已有清單時要先確認覆蓋
+    if (this.getData().categories.length > 0) {
+      const result = await Swal.fire({
+        title: '確定要取代目前清單？',
+        text: '目前的清單內容與勾選進度將被覆蓋，無法復原',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '確定取代',
+        cancelButtonText: '取消',
+        confirmButtonColor: '#3b82f6',
+        cancelButtonColor: '#6b7280'
+      });
+
+      if (!result.isConfirmed) return;
     }
 
-    const result = await Swal.fire({
-      title: '確定要取代目前清單？',
-      text: '目前的清單內容與勾選進度將被覆蓋，無法復原',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: '確定取代',
-      cancelButtonText: '取消',
-      confirmButtonColor: '#3b82f6',
-      cancelButtonColor: '#6b7280'
-    });
+    this.saveData(imported.data);
+    Users.setChecklistTitle(Users.getCurrentId(), imported.title);
 
-    if (!result.isConfirmed) return;
-
-    this.saveData(newData);
+    this.renderHeaderSubtitle();
     await this.renderChecklist();
     this.updateStats();
     this.showToast('清單已匯入', 'success');
@@ -1362,21 +1407,22 @@ const App = {
     const currentUser = Users.getCurrent();
     const userName = currentUser ? currentUser.name : '旅遊';
 
-    const { value: listName } = await Swal.fire({
+    // 檔名直接沿用小標的清單名稱，避免再問一次
+    const listName = this.getChecklistTitle();
+    const fileName = `${userName} ${listName}`.replace(/[\/\\:\*\?"<>\|]/g, '');
+
+    const result = await Swal.fire({
       title: '匯出 JSON 檔案',
-      input: 'text',
-      inputValue: '旅遊清單',
-      inputPlaceholder: '請輸入清單名稱',
+      html: `將下載為<br><strong>${this.escapeHtml(fileName)}.json</strong><br><br><small>可先點主畫面小標修改清單名稱</small>`,
+      icon: 'question',
       showCancelButton: true,
       confirmButtonText: '下載',
       cancelButtonText: '取消',
-      inputValidator: (value) => {
-        if (!value || !value.trim()) return '請輸入清單名稱';
-        if (/[\/\\:\*\?"<>\|]/.test(value)) return '名稱不可包含特殊字元';
-      }
+      confirmButtonColor: '#14b8a6',
+      cancelButtonColor: '#6b7280'
     });
 
-    if (!listName) return;
+    if (!result.isConfirmed) return;
 
     try {
       const payload = this.buildExportPayload(data);
@@ -1387,7 +1433,7 @@ const App = {
 
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${userName} ${listName.trim()}.json`;
+      link.download = `${fileName}.json`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

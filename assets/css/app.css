@@ -116,6 +116,56 @@ body {
 .header-subtitle {
   font-size: 0.95rem;
   color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.15rem;
+  padding: 0 1rem;
+}
+
+.subtitle-divider {
+  opacity: 0.6;
+}
+
+/* 可點擊修改的清單名稱 */
+.checklist-title-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0.6rem;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px dashed rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+  color: inherit;
+  font-size: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  max-width: 100%;
+}
+
+.checklist-title-btn:hover {
+  background: rgba(255, 255, 255, 0.28);
+  border-color: rgba(255, 255, 255, 0.8);
+  border-style: solid;
+}
+
+.checklist-title-btn:active {
+  transform: scale(0.97);
+}
+
+.checklist-title-btn > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.checklist-title-edit {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  opacity: 0.75;
 }
 
 /* === 選單按鈕 === */

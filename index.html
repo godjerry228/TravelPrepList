@@ -20,7 +20,7 @@
   <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
 
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="assets/css/app.css?v=17">
+  <link rel="stylesheet" href="assets/css/app.css?v=18">
 
   <!-- SortableJS CDN -->
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
@@ -60,7 +60,9 @@
   <header class="header-container pt-6 pb-4">
     <div class="header-icon">🧳</div>
     <h1 class="header-title">旅遊準備清單</h1>
-    <p class="header-subtitle"><span id="currentUserName"></span>的行李清單</p>
+    <p class="header-subtitle">
+      <span id="currentUserName"></span><span id="subtitleDivider" class="subtitle-divider">・</span><button type="button" id="checklistTitleBtn" class="checklist-title-btn" title="點擊修改清單名稱"><span id="checklistTitle"></span><svg class="checklist-title-edit" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button>
+    </p>
   </header>
 
   <!-- 主內容區 -->
@@ -208,10 +210,10 @@
   </div>
 
   <!-- JavaScript 模組 -->
-  <script src="assets/js/users.js?v=19"></script>
+  <script src="assets/js/users.js?v=21"></script>
   <script src="assets/js/storage.js?v=9"></script>
   <script src="assets/js/checklist.js?v=9"></script>
-  <script src="assets/js/app.js?v=20"></script>
+  <script src="assets/js/app.js?v=21"></script>
 
   <!-- PWA 註冊 -->
   <script>
